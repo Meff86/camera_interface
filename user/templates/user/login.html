@@ -1,0 +1,52 @@
+{% load static %}
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Главный экран</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'user/css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'user/css/normalize.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'user/css/error.css' %}">
+</head>
+<body>
+{% block content %}
+  <main class="authorization">
+      <h1 class="visually-hidden">Главный экран пользователя</h1>
+      <h2 class="authorization__title">Оцифровка запчастей</h2>
+      <p class="authorization__text">Авторизация пользователя:</p>
+      <form class="authorization-form" action="#" method="post">
+          {% csrf_token %}
+      <p class="authorization-form__login">
+        <label for="login">Логин:</label>
+        <input type="text" name="username" id="login" required="" autofocus="">
+      </p>
+      <p class="authorization-form__password">
+        <label for="password">Пароль:</label>
+        <input type="password" name="password" id="password" required="" autofocus="">
+      </p>
+      <button class="button authorization-form__button" type="submit">Вход</button>
+      </form>
+      {% if messages %}
+            <div class="error-message">
+                {% for message in messages %}
+                    <p>{{ message }}</p>
+                {% endfor %}
+            </div>
+      {% endif %}
+  </main>
+{% endblock %}
+<script>
+    // Отображение всплывающего окна с ошибками
+    document.addEventListener('DOMContentLoaded', function() {
+        var errorMessage = document.querySelector('.error-message');
+        if (errorMessage) {
+            errorMessage.style.display = 'block';
+            document.addEventListener('click', function() {
+                errorMessage.style.display = 'none';
+            });
+        }
+    });
+</script>
+
+</body>
+</html>
