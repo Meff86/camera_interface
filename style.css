@@ -1,0 +1,99 @@
+/* Общие стили */
+@font-face {
+  font-family: Calibri;
+  src: url("./fonts/calibri_bold.woff") format("woff");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: Calibri;
+  src: url("./fonts/calibri.woff") format("woff");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: Calibri;
+  src: url("./fonts/calibri_bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: Calibri;
+  src: url("./fonts/calibri.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+} 
+
+*:before,
+*:after {
+  box-sizing: inherit; }
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  border: 0;
+  padding: 0;
+  white-space: nowrap;
+  clip: rect(0 0 0 0);
+  overflow: hidden;
+}
+
+body {
+  font-size: 30px;
+  line-height: 1.5;
+  font-family: Calibri, Candara, Segoe, "Segoe UI", Optima, Arial, sans-serif;
+  background-color: #00b050;
+  color: #000000;
+  font-style: normal; 
+}
+
+/* Main */
+.authorization {
+  border-radius: 1em;
+  padding: 1em;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  margin-right: -50%;
+  transform: translate(-50%, -50%);
+}
+
+.authorization__title,
+.authorization__text {
+  text-align: center
+}
+
+.authorization-form__login label {
+  margin-right: 15px;
+}
+
+.authorization-form__login input,
+.authorization-form__password input {
+  border: 2px solid #0000ff;
+}
+
+.button {
+  padding: 10px 70px;
+  box-sizing: content-box;
+  background-color: #ffffff;
+  border: 2px solid #0000ff;
+  cursor: pointer;
+}
+
+button:active {
+  box-shadow: inset 0 0 5px rgba(0, 0, 0, .5);
+ }
+
+.authorization-form__button {
+  margin: 0 auto;
+  display: block;
+}
