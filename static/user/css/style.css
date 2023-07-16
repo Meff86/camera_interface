@@ -1,4 +1,5 @@
-/* Общие стили */
+/* General */
+
 @font-face {
   font-family: Calibri;
   src: url("./fonts/calibri_bold.woff") format("woff");
@@ -51,12 +52,17 @@ body {
   font-size: 30px;
   line-height: 1.5;
   font-family: Calibri, Candara, Segoe, "Segoe UI", Optima, Arial, sans-serif;
-  background-color: #00b050;
   color: #000000;
   font-style: normal; 
 }
 
-/* Main */
+
+/* Login */
+
+.body__authorization {
+  background-color: #00b050;
+}
+
 .authorization {
   border-radius: 1em;
   padding: 1em;
@@ -97,3 +103,4 @@ button:active {
   margin: 0 auto;
   display: block;
 }
+

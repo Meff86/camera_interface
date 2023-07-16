@@ -1,0 +1,225 @@
+/* General */
+
+@font-face {
+    font-family: Calibri;
+    src: url("./fonts/calibri_bold.woff") format("woff");
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+  }
+  
+  @font-face {
+    font-family: Calibri;
+    src: url("./fonts/calibri.woff") format("woff");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+  }
+  
+  @font-face {
+    font-family: Calibri;
+    src: url("./fonts/calibri_bold.woff2") format("woff2");
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+  }
+  
+  @font-face {
+    font-family: Calibri;
+    src: url("./fonts/calibri.woff2") format("woff2");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+  } 
+  
+  *:before,
+  *:after {
+    box-sizing: inherit; }
+  
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    border: 0;
+    padding: 0;
+    white-space: nowrap;
+    clip: rect(0 0 0 0);
+    overflow: hidden;
+  }
+  
+  body {
+    font-size: 30px;
+    line-height: 1.5;
+    font-family: Calibri, Candara, Segoe, "Segoe UI", Optima, Arial, sans-serif;
+    color: #000000;
+    font-style: normal; 
+  }
+  
+  a {
+    color: #000000;
+    text-decoration: none;
+  }
+  
+  .button {
+    padding: 10px 70px;
+    box-sizing: content-box;
+    background-color: #ffffff;
+    border: 2px solid #0000ff;
+    cursor: pointer;
+  }
+  
+  .button:active {
+    box-shadow: inset 0 0 5px rgba(0, 0, 0, .5);
+  }
+  
+  
+  /* Digital */
+  
+  .body__main {
+    background-color: #fff2cc;
+  }
+  
+  .digital {
+    width: 100%;
+    min-height: 100vh;
+    display: grid;
+    font-size: 24px;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    grid-template-areas:
+    "C C C C C C"
+    "A A A B B B"
+    "A A A B B B";
+  }
+  
+  form { 
+    margin: 0;
+  }
+  
+  progress {
+    height: 45px;
+  }
+  
+  .process_wrapper {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    margin-bottom: 5px;
+  }
+  
+  .digital__button {
+    font-weight: bold;
+    border: 1px solid #000000;
+  }
+  
+  .nav {
+    grid-area: C;
+    align-self: stretch;
+  }
+  
+  .nav__list {
+    display: flex;
+    flex-direction: row;
+    list-style: none;
+    justify-content: space-between;
+    margin: 0;
+    padding: 0;
+  }
+  
+  .nav__item {
+    border: 1px solid #000000;
+    padding: 6px 0;
+    align-self: stretch;
+    text-align: center;
+    background-color: #ffffff;
+    flex-grow: 1;
+  }
+  
+  .nav__list a:hover {
+    color: #ff0000;
+  }
+  
+  .nav__list a:focus {
+    color: #808080;
+    opacity: 0.3;
+  }
+  
+  .current-page {
+    color: #ffffff;
+    background-color: #00b050;
+  }
+  
+  .digital__process-sequence {
+    display: inline-block;
+    border: 1px solid black;
+    background-color: white;
+    padding: 2px 10px;
+    margin: 5px 0;
+  }
+  
+  .digital__process {
+    grid-area: A;
+    align-self: stretch;
+  }
+  
+  .digital__process-action-button {
+    padding: 5px 10px;
+  }
+  
+  .digital__camera {
+    grid-area: B;
+    align-self: stretch;
+  }
+  
+  .digital__camera-heading {
+    text-align: center;
+  }
+  
+  .digital__camera-option {
+    text-align: center;
+  }
+  
+  
+  .digital__checkbox {
+    width: 35px;
+    height: 35px;
+  }
+  
+  .digital__checkbox::before {
+    content: "";
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: 3px;
+    box-sizing: border-box;
+    visibility: hidden;
+  }
+  
+  .digital__checkbox:checked::before {
+    visibility: visible;
+  }
+  
+  .digital_video {
+    position: relative;
+  }
+  
+  .digital_video-full {
+    position: absolute;
+    right: 590px;
+    top: 10px;
+  }
+  
+  
+  .digital-button__record {
+    color: #ffffff;
+    background-color: red;
+  }
+  
+  .digital__camera progress {
+    margin-bottom: 10px;
+  }
+  
+  
+  
