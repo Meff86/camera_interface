@@ -14,7 +14,7 @@
       <h1 class="visually-hidden">Главный экран пользователя</h1>
       <h2 class="authorization__title">Оцифровка запчастей</h2>
       <p class="authorization__text">Авторизация пользователя:</p>
-      <form class="authorization-form" action="#" method="post">
+      <form class="authorization-form" action="{% url 'user:login' %}?next=/interface/digital_camera/" method="post">
           {% csrf_token %}
       <p class="authorization-form__login">
         <label for="login">Логин:</label>

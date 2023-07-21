@@ -1,0 +1,183 @@
+{% load static %}
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Экран оцифровки запчасти</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'interface/css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'interface/css/normalize.css' %}">
+    <script src="{% static 'interface/js/script.js' %}"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body class="body__main">
+    {% block content %}
+    <main class="site-main digital">
+        <nav class="nav">
+            <ul class="nav__list">
+                <li class="nav__item current-page"><a href="#">Экран оцифровки запчасти</a></li>
+                <li class="nav__item"><a href="#">Список запчастей</a></li>
+                <li class="nav__item"><a href="#">Экран проверки</a></li>
+                <li class="nav__item"><a class="logout-button" href="{% url 'user:logout' %}">Выход</a></li>
+            </ul>
+        </nav>
+        <h1 class="visually-hidden">Экран оцифровки запчасти</h1>
+        <section class="digital__process">
+            <div class="digital__user process_wrapper">
+                <div class="digital__user-name">Пользователь: {{ request.user.last_name }} {{ request.user.first_name }}</div>
+                <div class="digital__user-task"><a class="button digital__button digital__user-task-link" href="#">Задание!</a></div>
+            </div>
+            <p class="digital__process-sequence">Последовательность оцифровки:</p>
+            <form class="digital__process-form-photo" action="" method="post">
+                {% csrf_token %}
+              <fieldset class="digital__process-fieldset-photo">
+                 <div class="process_wrapper">
+                  <label class="digital__process-input-label-article" for="article">Артикул</label>
+                  <input type="text" name="current_article_number" id="current_article_number" value="">
+                  <input class="digital__checkbox checkbox-article" type="checkbox" name="done" id="checkbox-article">
+                </div>
+                <div class="process_wrapper">
+                  <label class="digital__process-label-photo" for="photo">
+                    1. Фотография артикула (с веб камеры)
+                  </label>
+                  <input class="digital__checkbox checkbox-photo" type="checkbox" name="done" id="photo">
+                </div>
+                <div class="process_wrapper">
+                  <div class="digital__process-actions">
+                    <a class="digital__process-run action" href="#"><img src="{% static 'interface/img/svg/run.svg' %}" height="30" width="30" alt="run"></a>
+                    <a class="digital__process-stop action" href="#"><img src="{% static 'interface/img/svg/stop.svg' %}" height="30" width="30" alt="stop"></a>
+                    <a class="digital__process-back action" href="#"><img src="{% static 'interface/img/svg/back.svg' %}" height="30" width="30" class="back"></a>
+                    <a class="digital__process-next action" href="#"><img src="{% static 'interface/img/svg/next.svg' %}" height="30" width="30" class="next"></a>
+                    <a class="digital__process-delete action" href="#"><img src="{% static 'interface/img/svg/delete.svg' %}" height="30" width="30" class="delete"></a>
+                  </div>
+                  <button class="button digital__button digital__process-action-button">готово</button>
+                </div>
+              </fieldset>
+            </form>
+            <form class="digital__process-form-photo-front" action="#" method="post">
+                <fieldset class="digital__process-fieldset-photo-front">
+                    <div class="digital__process-input-wrapper">
+                        <label class="digital__process-input-label" for="photo-front">2. Лицевая сторона (название и артикул запчасти)</label> <br>
+                        <div class="process_wrapper">
+                        <progress max="100" value="50"></progress>
+                        <input class="digital__checkbox checkbox-front" type="checkbox" name="done" id="photo-front">
+                        </div>
+                    </div>
+                    <div class="process_wrapper">
+                      <div class="digital__process-actions">
+                        <a class="digital__process-run action" href="#"><img src="{% static 'interface/img/svg/run.svg' %}" height="30" width="30" alt="run"></a>
+                        <a class="digital__process-stop action" href="#"><img src="{% static 'interface/img/svg/stop.svg' %}" height="30" width="30" alt="stop"></a>
+                        <a class="digital__process-back action" href="#"><img src="{% static 'interface/img/svg/back.svg' %}" height="30" width="30" class="back"></a>
+                        <a class="digital__process-next action" href="#"><img src="{% static 'interface/img/svg/next.svg' %}" height="30" width="30" class="next"></a>
+                        <a class="digital__process-delete action" href="#"><img src="{% static 'interface/img/svg/delete.svg' %}" height="30" width="30" class="delete"></a>
+                      </div>
+                          <button class="button digital__button digital__process-action-button">готово</button>
+                      </div>
+                </fieldset>
+            </form>
+            <p class="visually-hidden">Значение переменной: <span id="resultValue"></span></p>
+            <form class="digital__process-form-rear" action="#" method="post">
+                <fieldset class="digital__process-fieldset-rear">
+                    <div class="digital__process-input-wrapper">
+                        <label class="digital__process-input-label" for="photo-rear">3. Тыльная сторона (название и артикул запчасти)</label> <br>
+                        <div class="process_wrapper">
+                        <progress max="100" value="0"></progress>
+                        <input class="digital__checkbox checkbox-rear" type="checkbox" name="done" id="photo-rear">
+                        </div>
+                    </div>
+                    <div class="process_wrapper">
+                      <div class="digital__process-actions">
+                        <a class="digital__process-run action" href="#"><img src="{% static 'interface/img/svg/run.svg' %}" height="30" width="30" alt="run"></a>
+                        <a class="digital__process-stop action" href="#"><img src="{% static 'interface/img/svg/stop.svg' %}" height="30" width="30" alt="stop"></a>
+                        <a class="digital__process-back action" href="#"><img src="{% static 'interface/img/svg/back.svg' %}" height="30" width="30" class="back"></a>
+                        <a class="digital__process-next action" href="#"><img src="{% static 'interface/img/svg/next.svg' %}" height="30" width="30" class="next"></a>
+                        <a class="digital__process-delete action" href="#"><img src="{% static 'interface/img/svg/delete.svg' %}" height="30" width="30" class="delete"></a>
+                      </div>
+                          <button class="button digital__button digital__process-action-button">готово</button>
+                      </div>
+                </fieldset>
+            </form>
+            <form class="digital__process-form-photo-other" action="#" method="post">
+                <fieldset class="digital__process-fieldset-photo-other">
+                    <div class="digital__process-input-wrapper">
+                        <label class="digital__process-input-label" for="photo-other">4. Дополнительные фото (название и артикул запчасти)</label> <br>
+                        <div class="process_wrapper">
+                        <progress max="100" value="0"></progress>
+                        <input class="digital__checkbox checkbox-photo-other" type="checkbox" name="done" id="photo-other">
+                        </div>
+                    </div>
+                    <div class="process_wrapper">
+                      <div class="digital__process-actions">
+                        <a class="digital__process-run action" href="#"><img src="{% static 'interface/img/svg/run.svg' %}" height="30" width="30" alt="run"></a>
+                        <a class="digital__process-stop action" href="#"><img src="{% static 'interface/img/svg/stop.svg' %}" height="30" width="30" alt="stop"></a>
+                        <a class="digital__process-back action" href="#"><img src="{% static 'interface/img/svg/back.svg' %}" height="30" width="30" class="back"></a>
+                        <a class="digital__process-next action" href="#"><img src="{% static 'interface/img/svg/next.svg' %}" height="30" width="30" class="next"></a>
+                        <a class="digital__process-delete action" href="#"><img src="{% static 'interface/img/svg/delete.svg' %}" height="30" width="30" class="delete"></a>
+                      </div>
+                          <button class="button digital__button digital__process-action-button">готово</button>
+                      </div>
+                </fieldset>
+            </form>
+        </section>
+        <section class="digital__camera">
+            <form class="digital__camera-form" action="#" method="post">
+                <p class="digital__camera-heading">Экран камеры</p>
+                    <div class="digital_video">
+                        <img src="{% url 'interface:stream_video' %}" id="video" width="640" height="480">
+                        <a class="digital_video-full" href="#" onclick="openFullscreen();"><img src="{% static 'interface/img/svg/full_screen.svg' %}" width="40" height="40"></a>
+                    </div>
+                <div class="digital__camera-option">
+                    <div class="digital__camera-buttons process_wrapper">
+                        <button class="button digital__button digital__camera-button">Переснять всё</button>
+                        <button class="button digital__button digital-button__record digital__camera-button">Запись на диск</button>  
+                    </div>
+                    <div class="digital__camera-progress ">
+                        <progress max="100" value="0"></progress> 
+                    </div>
+                    <div class="digital__camera-next ">
+                        <a class="button digital__button digital__camera-button" href="#">Перейти к следующей запчасти</a>
+                    </div>
+                </div>
+            </form>       
+        </section>
+    </main>
+    {% endblock %}
+
+</body>
+</html>
+
+<script>
+    // Функция для асинхронной передачи значения на сервер
+    function updateValue(value) {
+        $.ajax({
+            type: "POST",
+            url: "{% url 'interface:example_view' %}", // Замените 'example_view' на имя вашего view
+            data: {
+                'value': value,
+                'csrfmiddlewaretoken': '{{ csrf_token }}' // Добавление CSRF токена для защиты от CSRF атак
+            },
+            success: function(response) {
+                // Обновление элемента на странице с результатом
+                $("#resultValue").text(response.result);
+            },
+            error: function(error) {
+                console.log("Ошибка при передаче значения: " + error);
+            }
+        });
+    }
+
+    // Обработчик события изменения input поля
+    $("#current_article_number").on('keydown', function(event) {
+        if (event.key === "Enter") {
+            event.preventDefault();
+            var value = $(this).val();
+            updateValue(value); // Вызов функции для отправки значения на сервер
+
+            // Активация чекбокса "article"
+            articleCheckbox.checked = value !== "";
+        }
+    });
+
+    // Получаем ссылку на чекбокс "article"
+    var articleCheckbox = document.getElementById("checkbox-article");
+</script>
+

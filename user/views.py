@@ -1,7 +1,8 @@
 from django.shortcuts import render, redirect, reverse
 from django.contrib.auth.models import User
 from django.contrib import messages
-
+from django.contrib.auth import logout
+from django.contrib.auth.views import logout_then_login
 
 def login_view(request):
     if request.method == 'POST':
@@ -9,19 +10,18 @@ def login_view(request):
         password = request.POST.get('password')
 
         try:
-            # Поиск пользователя по имени пользователя (username)
             user = User.objects.get(username=username)
-            # Проверка правильности пароля
             if user.check_password(password):
-                # Вход выполнен успешно
-                return redirect('home')
+                return redirect(request.GET.get('next') or '/interface/digital_camera/')
             else:
-                # Неправильные учетные данные
                 messages.error(request, 'Вы ввели неправильные данные.')
         except User.DoesNotExist:
-            # Пользователь не найден
             messages.error(request, 'Пользователь не найден.')
 
-        return redirect(reverse('user:login'))
+        return redirect('user:login')
 
     return render(request, 'user/login.html')
+
+
+def logout_view(request):
+    return logout_then_login(request, login_url='user:login')

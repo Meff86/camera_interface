@@ -36,13 +36,13 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'user',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'user',
     'interface',
     'django.contrib.postgres',
 
@@ -92,7 +92,7 @@ POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD")
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
+        'ENGINE': 'django.db.backends.mysql',
         "NAME": POSTGRES_DB,
         "USER": POSTGRES_USER,
         "HOST": POSTGRES_HOST,
@@ -103,6 +103,7 @@ DATABASES = {
 
 
 STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 MEDIA_URL = 'media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 # Password validation
@@ -144,3 +145,6 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+LOGIN_URL = 'user:login'
+LOGOUT_URL = 'user:logout'
