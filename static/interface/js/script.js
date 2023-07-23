@@ -1,9 +1,34 @@
 document.addEventListener("DOMContentLoaded", function() {
   // Получаем ссылку на форму
   var form = document.querySelector(".digital__process-form-photo");
+  var formFront = document.querySelector(".digital__process-form-photo-front");
 
   // Получаем ссылку на кнопку
   var runButton = document.querySelector(".digital__process-run");
+  var runFrontButton = document.querySelector(".digital__process-front-run");
+
+  runFrontButton.addEventListener("click", async function () {
+  try {
+    const csrfToken = getCsrfToken();
+
+    const response = await fetch('/interface/capture_frames/', {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': csrfToken,
+      },
+    });
+
+    // Остальной код...
+  } catch (error) {
+    console.error('Произошла ошибка:', error);
+  }
+});
+
+function getCsrfToken() {
+  const csrfTag = document.querySelector("meta[name='csrf-token']");
+  return csrfTag ? csrfTag.getAttribute("content") : '';
+}
+
 
 
   // Добавляем обработчик клика на кнопку

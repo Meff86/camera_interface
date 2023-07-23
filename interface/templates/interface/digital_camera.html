@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Экран оцифровки запчасти</title>
+    <meta name="csrf-token" content="{{ csrf_token }}">
     <link rel="stylesheet" type="text/css" href="{% static 'interface/css/style.css' %}">
     <link rel="stylesheet" href="{% static 'interface/css/normalize.css' %}">
     <script src="{% static 'interface/js/script.js' %}"></script>
@@ -49,11 +50,12 @@
                     <a class="digital__process-next action" href="#"><img src="{% static 'interface/img/svg/next.svg' %}" height="30" width="30" class="next"></a>
                     <a class="digital__process-delete action" href="#"><img src="{% static 'interface/img/svg/delete.svg' %}" height="30" width="30" class="delete"></a>
                   </div>
-                  <button class="button digital__button digital__process-action-button">готово</button>
+                  <button class="button digital__button digital__process-action-button button-photo-1">готово</button>
                 </div>
               </fieldset>
             </form>
             <form class="digital__process-form-photo-front" action="#" method="post">
+                {% csrf_token %}
                 <fieldset class="digital__process-fieldset-photo-front">
                     <div class="digital__process-input-wrapper">
                         <label class="digital__process-input-label" for="photo-front">2. Лицевая сторона (название и артикул запчасти)</label> <br>
@@ -64,11 +66,11 @@
                     </div>
                     <div class="process_wrapper">
                       <div class="digital__process-actions">
-                        <a class="digital__process-run action" href="#"><img src="{% static 'interface/img/svg/run.svg' %}" height="30" width="30" alt="run"></a>
-                        <a class="digital__process-stop action" href="#"><img src="{% static 'interface/img/svg/stop.svg' %}" height="30" width="30" alt="stop"></a>
-                        <a class="digital__process-back action" href="#"><img src="{% static 'interface/img/svg/back.svg' %}" height="30" width="30" class="back"></a>
-                        <a class="digital__process-next action" href="#"><img src="{% static 'interface/img/svg/next.svg' %}" height="30" width="30" class="next"></a>
-                        <a class="digital__process-delete action" href="#"><img src="{% static 'interface/img/svg/delete.svg' %}" height="30" width="30" class="delete"></a>
+                        <a class="digital__process-front-run action" href="#"><img src="{% static 'interface/img/svg/run.svg' %}" height="30" width="30" alt="run"></a>
+                        <a class="digital__process-front-stop action" href="#"><img src="{% static 'interface/img/svg/stop.svg' %}" height="30" width="30" alt="stop"></a>
+                        <a class="digital__process-front-back action" href="#"><img src="{% static 'interface/img/svg/back.svg' %}" height="30" width="30" class="back"></a>
+                        <a class="digital__process-front-next action" href="#"><img src="{% static 'interface/img/svg/next.svg' %}" height="30" width="30" class="next"></a>
+                        <a class="digital__process-front-delete action" href="#"><img src="{% static 'interface/img/svg/delete.svg' %}" height="30" width="30" class="delete"></a>
                       </div>
                           <button class="button digital__button digital__process-action-button">готово</button>
                       </div>

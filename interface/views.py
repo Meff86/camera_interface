@@ -1,23 +1,87 @@
-
-from django.shortcuts import render
-from django.contrib.auth.decorators import login_required
-import os
 import cv2
-from django.http import HttpResponse, StreamingHttpResponse
+import time
+import asyncio
+from django.http import HttpResponse, StreamingHttpResponse, JsonResponse
+from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
-from django.http import JsonResponse
 
+import os
 
-
-
-
-
-# Определим глобальные переменные для хранения последнего кадра, номера папки и счетчика скриншотов
+# Глобальные переменные
 last_frame = None
 folder_number = 1
 screenshot_counter = 1
 value = None
 
+# Функция для захвата кадров
+
+# async def capture_frames():
+#     # Создание объекта VideoCapture для захвата видео с веб-камеры
+#     video_capture = cv2.VideoCapture(1)  # Используем индекс веб-камеры по умолчанию (например, 0 для первой веб-камеры)
+#
+#     # Установка разрешения видео
+#     video_capture.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
+#     video_capture.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
+#
+#     frame_interval = 0.1
+#     max_time = 22.5
+#     start_time = time.time()
+#     i = 0
+#
+#     while (time.time() - start_time) < max_time:
+#         i += 1
+#
+#         ret, frame = video_capture.read()
+#
+#         if not ret:
+#             continue
+#
+#         color_file_path = f'D:/interface/color_frame_{i}.jpg'
+#         cv2.imwrite(color_file_path, frame)
+#
+#         # Обновление последнего кадра
+#         global last_frame
+#         last_frame = frame
+#
+#         # Задержка для получения желаемого интервала кадров
+#         await asyncio.sleep(frame_interval)
+#
+#     video_capture.release()
+
+async def capture_frames(request):
+    frame_interval = 0.1
+    max_time = 22.5
+    start_time = time.time()
+    i = 0
+
+    while (time.time() - start_time) < max_time:
+        i += 1
+
+        # Ожидаем получения нового кадра из генератора
+        await asyncio.sleep(frame_interval)
+
+        # Получаем последний доступный кадр из глобальной переменной
+        frame = last_frame
+        next_value = value
+
+        if frame is None:
+            continue
+
+        color_file_path = f'D:/digital/{next_value}/{next_value}_{i}.jpg'
+        cv2.imwrite(color_file_path, frame)
+
+    return JsonResponse({'success': True})
+
+@csrf_exempt
+def capture_frames_view(request):
+    if request.method == 'POST':
+        # Вызов функции для захвата кадров с веб-камеры через асинхронный вызов
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(capture_frames(request))
+
+        # Возврат ответа для подтверждения успешного выполнения запроса
+        return JsonResponse({'success': True})
+    return JsonResponse({'success': False, 'error': 'Метод должен быть POST.'}, status=400)
 def stream_video(request):
     # Открываем видеопоток с веб-камеры
     cap = cv2.VideoCapture(1)
@@ -44,8 +108,8 @@ def stream_video(request):
             yield (b'--frame\r\n'
                    b'Content-Type: image/jpeg\r\n\r\n' + jpeg.tobytes() + b'\r\n\r\n')
 
-    # Создаем объект StreamingHttpResponse и передаем генератор в качестве параметра
     return StreamingHttpResponse(generate_frames(), content_type='multipart/x-mixed-replace; boundary=frame')
+
 @csrf_exempt
 def example_view(request):
     global value
@@ -74,9 +138,9 @@ def save_screenshot(request):
 
     # Save the frame as an image file with a unique name, including the article number if available
     if value:
-        filename = f"screenshot_{screenshot_counter}_{value}.jpg"
+        filename = f"article_{screenshot_counter}_{value}.jpg"
     else:
-        filename = f"screenshot_{screenshot_counter}.jpg"
+        filename = f"article_{screenshot_counter}.jpg"
 
     filepath = os.path.join(folder_path, filename)
     cv2.imwrite(filepath, frame)
