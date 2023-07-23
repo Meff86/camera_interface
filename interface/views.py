@@ -4,7 +4,7 @@ import asyncio
 from django.http import HttpResponse, StreamingHttpResponse, JsonResponse
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
-
+import paramiko
 import os
 
 # Глобальные переменные
@@ -13,44 +13,10 @@ folder_number = 1
 screenshot_counter = 1
 value = None
 
-# Функция для захвата кадров
-
-# async def capture_frames():
-#     # Создание объекта VideoCapture для захвата видео с веб-камеры
-#     video_capture = cv2.VideoCapture(1)  # Используем индекс веб-камеры по умолчанию (например, 0 для первой веб-камеры)
-#
-#     # Установка разрешения видео
-#     video_capture.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
-#     video_capture.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
-#
-#     frame_interval = 0.1
-#     max_time = 22.5
-#     start_time = time.time()
-#     i = 0
-#
-#     while (time.time() - start_time) < max_time:
-#         i += 1
-#
-#         ret, frame = video_capture.read()
-#
-#         if not ret:
-#             continue
-#
-#         color_file_path = f'D:/interface/color_frame_{i}.jpg'
-#         cv2.imwrite(color_file_path, frame)
-#
-#         # Обновление последнего кадра
-#         global last_frame
-#         last_frame = frame
-#
-#         # Задержка для получения желаемого интервала кадров
-#         await asyncio.sleep(frame_interval)
-#
-#     video_capture.release()
 
 async def capture_frames(request):
     frame_interval = 0.1
-    max_time = 22.5
+    max_time = 30
     start_time = time.time()
     i = 0
 
@@ -155,7 +121,57 @@ def save_screenshot(request):
 
     # Return a response indicating success
     return HttpResponse('Screenshot saved successfully.')
+@csrf_exempt
+def send_files_to_server(request):
+    local_path = "D:/digital"
+    server_ip = "95.163.233.68"
+    server_login = "root"
+    server_password = "Mrhk%3+#yuqx"
+    remote_path = "/digital/" # Замените на путь назначения на сервере
 
+    # Создаем SSH-клиент
+    ssh = paramiko.SSHClient()
+    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+
+    try:
+        # Устанавливаем соединение с сервером
+        ssh.connect(server_ip, username=server_login, password=server_password)
+
+        # Создаем удаленную папку назначения, если она не существует
+        stdin, stdout, stderr = ssh.exec_command(f"mkdir -p {remote_path}")
+        if stderr.readlines():
+            print(f"Не удалось создать папку {remote_path}")
+
+        # Передаем файлы на сервер
+        for root, dirs, files in os.walk(local_path):
+            for file in files:
+                local_file_path = os.path.join(root, file)
+                remote_file_path = os.path.join(remote_path, root.replace(local_path, ""), file)
+
+                # Создаем удаленные директории, если они не существуют
+                stdin, stdout, stderr = ssh.exec_command(f"mkdir -p {os.path.dirname(remote_file_path)}")
+                if stderr.readlines():
+                    print(f"Не удалось создать папку {os.path.dirname(remote_file_path)}")
+
+                # Передаем файл
+                sftp = ssh.open_sftp()
+                sftp.put(local_file_path, remote_file_path)
+                sftp.close()
+
+    except paramiko.AuthenticationException:
+        print("Ошибка аутентификации. Пожалуйста, проверьте учетные данные.")
+        return JsonResponse({'success': False, 'error': 'Ошибка аутентификации. Пожалуйста, проверьте учетные данные.'}, status=500)
+    except paramiko.SSHException as ssh_exception:
+        print(f"Ошибка SSH: {ssh_exception}")
+        return JsonResponse({'success': False, 'error': f'Ошибка SSH: {ssh_exception}'}, status=500)
+    except Exception as e:
+        print(f"Произошла ошибка: {e}")
+        return JsonResponse({'success': False, 'error': f'Произошла ошибка: {e}'}, status=500)
+    finally:
+        ssh.close()
+
+    # Возвращаем подтверждение об успешной отправке
+    return JsonResponse({'success': True})
 
 
 

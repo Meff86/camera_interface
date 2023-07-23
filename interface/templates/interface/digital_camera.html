@@ -122,6 +122,7 @@
         </section>
         <section class="digital__camera">
             <form class="digital__camera-form" action="#" method="post">
+                {% csrf_token %}
                 <p class="digital__camera-heading">Экран камеры</p>
                     <div class="digital_video">
                         <img src="{% url 'interface:stream_video' %}" id="video" width="640" height="480">
@@ -129,8 +130,9 @@
                     </div>
                 <div class="digital__camera-option">
                     <div class="digital__camera-buttons process_wrapper">
+                        {% csrf_token %}
                         <button class="button digital__button digital__camera-button">Переснять всё</button>
-                        <button class="button digital__button digital-button__record digital__camera-button">Запись на диск</button>  
+                        <button class="button digital__button digital-button__record digital__camera-button ">Запись на диск</button>
                     </div>
                     <div class="digital__camera-progress ">
                         <progress max="100" value="0"></progress> 
@@ -181,5 +183,24 @@
 
     // Получаем ссылку на чекбокс "article"
     var articleCheckbox = document.getElementById("checkbox-article");
+    function sendFilesToServer() {
+    // Асинхронный POST-запрос к серверу
+    fetch('/send_files/', {
+      method: 'POST',
+    })
+    .then(response => {
+      if (response.ok) {
+        // Обработка успешного ответа от сервера (если нужно)
+        console.log('Файлы успешно отправлены на сервер.');
+      } else {
+        // Обработка ошибки, если запрос не выполнен успешно
+        console.error('Произошла ошибка при отправке файлов на сервер.');
+      }
+    })
+    .catch(error => {
+      // Обработка ошибки, если возникла непредвиденная ситуация
+      console.error('Произошла непредвиденная ошибка:', error);
+    });
+  }
 </script>
 

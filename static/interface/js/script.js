@@ -2,10 +2,11 @@ document.addEventListener("DOMContentLoaded", function() {
   // Получаем ссылку на форму
   var form = document.querySelector(".digital__process-form-photo");
   var formFront = document.querySelector(".digital__process-form-photo-front");
-
+  var digCameraForm = document.querySelector(".digital__process-form-photo-front");
   // Получаем ссылку на кнопку
   var runButton = document.querySelector(".digital__process-run");
   var runFrontButton = document.querySelector(".digital__process-front-run");
+  var runDiskButton = document.querySelector(".digital-button__record");
 
   runFrontButton.addEventListener("click", async function () {
   try {
@@ -23,6 +24,30 @@ document.addEventListener("DOMContentLoaded", function() {
     console.error('Произошла ошибка:', error);
   }
 });
+runDiskButton.addEventListener("click", async function () {
+  event.preventDefault();
+  try {
+    const csrfToken = getCsrfToken();
+
+    const response = await fetch('/interface/send_files/', {  // Проверьте этот путь
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': csrfToken,
+      },
+    });
+
+    if (response.ok) {
+      console.log('Файлы успешно отправлены на сервер.');
+    } else {
+      console.error('Произошла ошибка при отправке файлов на сервер.');
+    }
+  } catch (error) {
+    console.error('Произошла непредвиденная ошибка:', error);
+  }
+});
+
+
+
 
 function getCsrfToken() {
   const csrfTag = document.querySelector("meta[name='csrf-token']");
