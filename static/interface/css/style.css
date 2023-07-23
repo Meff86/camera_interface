@@ -201,6 +201,52 @@ progress {
   visibility: visible;
 }
 
+.digital_video-wrapper {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+}
+
+.digital_video-1 {
+  position: relative;
+}
+
+.digital_video-full-1 {
+  position: absolute;
+  right: 269px;
+  top: 10px;
+}
+
+.digital_video-2 {
+  position: relative;
+}
+
+.digital_video-full-2 {
+  position: absolute;
+  right: 269px;
+  top: 10px;
+}
+
+.digital_video-3 {
+  position: relative;
+}
+
+.digital_video-full-3 {
+  position: absolute;
+  right: 269px;
+  top: 10px;
+}
+
+.digital_video-4 {
+  position: relative;
+}
+
+.digital_video-full-4 {
+  position: absolute;
+  right: 269px;
+  top: 10px;
+}
+/*
 .digital_video {
   position: relative;
 }
@@ -210,7 +256,7 @@ progress {
   right: 590px;
   top: 10px;
 }
-
+*/
 .digital-button__record {
   color: #ffffff;
   background-color: red;
@@ -251,4 +297,8 @@ progress {
 
 .modal-ok-button:hover {
   background-color: #45a049;
+}
+
+.current-point {
+  background-color: #c5e0b4;
 }
