@@ -4,26 +4,10 @@ document.addEventListener("DOMContentLoaded", function() {
   var formFront = document.querySelector(".digital__process-form-photo-front");
   var digCameraForm = document.querySelector(".digital__process-form-photo-front");
   // Получаем ссылку на кнопку
-  var runButton = document.querySelector(".digital__process-run");
-  var runFrontButton = document.querySelector(".digital__process-front-run");
+
   var runDiskButton = document.querySelector(".digital-button__record");
 
-  runFrontButton.addEventListener("click", async function () {
-  try {
-    const csrfToken = getCsrfToken();
 
-    const response = await fetch('/interface/capture_frames/', {
-      method: 'POST',
-      headers: {
-        'X-CSRFToken': csrfToken,
-      },
-    });
-
-    // Остальной код...
-  } catch (error) {
-    console.error('Произошла ошибка:', error);
-  }
-});
 runDiskButton.addEventListener("click", async function () {
   event.preventDefault();
   try {
@@ -56,85 +40,68 @@ function getCsrfToken() {
 
 
 
-  // Добавляем обработчик клика на кнопку
-  runButton.addEventListener("click", function(event) {
-    event.preventDefault();
-
-    // Изменяем стиль фона формы
-    form.style.backgroundColor = "green";
-
-    // Отображаем модальное окно и активируем чекбокс "photo"
-    showModal("Сфотографируйте артикул детали", "photo");
-  });
-
-  // Функция для отображения модального окна и активации чекбокса
-  function showModal(message, checkboxId) {
-    var modal = document.createElement("div");
-    modal.className = "modal";
-    modal.innerHTML = `
-      <div class="modal-content">
-        <p>${message}</p>
-        <button class="modal-ok-button" name="ok_button">OK</button>
-      </div>
-    `;
-    document.body.appendChild(modal);
-
-    var modalOkButton = modal.querySelector(".modal-ok-button");
-    modalOkButton.addEventListener("click", function() {
-      // Активируем чекбокс "photo"
-      var checkbox = document.getElementById(checkboxId);
-      checkbox.checked = true;
-      console.log("Modal shown. Checkbox ID:", checkboxId);
-
-      // Make an AJAX request to save the screenshot
-      var xhr = new XMLHttpRequest();
-      xhr.open('POST', '/interface/save_screenshot/');
-      xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-      var formData = new FormData();
-      formData.append('current_article_number', current_article_number);
-      xhr.send(formData);
-
-      console.log("Отправленное значение current_article_number:", current_article_number);
-
-      // Возвращаем стандартный стиль фона формы
-      form.style.backgroundColor = "";
-
-      // Удаляем модальное окно
-      modal.parentNode.removeChild(modal);
-    });
-  }
-});
-
-
-function openFullscreen() {
-  var elem = document.getElementById("video");
+function openFullscreen(videoId) {
+  var elem = document.getElementById(videoId);
   if (elem.requestFullscreen) {
     elem.requestFullscreen().then(function() {
-      elem.width = 1920;
-      elem.height = 1080;
+      elem.width = window.screen.width;
+      elem.height = window.screen.height;
     });
   } else if (elem.mozRequestFullScreen) { // Firefox
     elem.mozRequestFullScreen().then(function() {
-      elem.width = 1920;
-      elem.height = 1080;
+      elem.width = window.screen.width;
+      elem.height = window.screen.height;
     });
-  } else if (elem.webkitRequestFullscreen) { // Chrome, Safari and Opera
+  } else if (elem.webkitRequestFullscreen) { // Chrome, Safari и Opera
     elem.webkitRequestFullscreen().then(function() {
-      elem.width = 1920;
-      elem.height = 1080;
+      elem.width = window.screen.width;
+      elem.height = window.screen.height;
     });
   } else if (elem.msRequestFullscreen) { // IE/Edge
     elem.msRequestFullscreen().then(function() {
-      elem.width = 1920;
-      elem.height = 1080;
+      elem.width = window.screen.width;
+      elem.height = window.screen.height;
     });
   }
 }
 
 document.addEventListener("fullscreenchange", function() {
-  var elem = document.getElementById("video");
-  if (!document.fullscreenElement) {
-    elem.width = 640;
-    elem.height = 480;
+  var elem = document.fullscreenElement;
+  if (!elem) {
+    // Выход из полноэкранного режима, установите исходные значения размеров
+    var videoElements = document.querySelectorAll(".digital_video-wrapper img");
+    videoElements.forEach(function(video) {
+      video.width = 320;
+      video.height = 240;
+    });
+    var fullscreenIcons = document.querySelectorAll(".digital_video-wrapper a");
+    fullscreenIcons.forEach(function(icon) {
+      icon.firstChild.width = 40;
+      icon.firstChild.height = 40;
+    });
   }
 });
+
+
+
+function switchToNextForm(event) {
+  event.preventDefault();
+  const currentForm = document.querySelector('.current-point');
+  if (currentForm.classList.contains('digital__process-form-photo')) {
+    currentForm.classList.remove('current-point');
+    const nextForm = document.querySelector('.digital__process-form-photo-front');
+    nextForm.classList.add('current-point');
+  } else if (currentForm.classList.contains('digital__process-form-photo-front')) {
+    currentForm.classList.remove('current-point');
+    const nextForm = document.querySelector('.digital__process-form-rear');
+    nextForm.classList.add('current-point');
+  } else if (currentForm.classList.contains('digital__process-form-rear')) {
+    currentForm.classList.remove('current-point');
+    const nextForm = document.querySelector('.digital__process-form-photo-other');
+    nextForm.classList.add('current-point');
+  } else if (currentForm.classList.contains('digital__process-form-photo-other')) {
+    // Do something else if needed
+  }
+}
+
+

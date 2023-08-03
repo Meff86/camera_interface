@@ -22,12 +22,13 @@
             </ul>
         </nav>
         <h1 class="visually-hidden">Экран оцифровки запчасти</h1>
-        <section class="digital__process">
+              <section class="digital__process">
             <div class="digital__user process_wrapper">
                 <div class="digital__user-name">Пользователь: {{ request.user.last_name }} {{ request.user.first_name }}</div>
                 <div class="digital__user-task"><a class="button digital__button digital__user-task-link" href="#">Задание!</a></div>
             </div>
             <p class="digital__process-sequence">Последовательность оцифровки:</p>
+          <div id="content1">
             <form class="digital__process-form-photo current-point" action="" method="post">
                 {% csrf_token %}
               <fieldset class="digital__process-fieldset-photo">
@@ -43,120 +44,136 @@
                   <input class="digital__checkbox checkbox-photo" type="checkbox" name="done" id="photo">
                 </div>
                 <div class="process_wrapper">
+                    {% csrf_token %}
                   <div class="digital__process-actions">
-                    <a class="digital__process-run action" href="#"><img src="{% static 'interface/img/svg/run.svg' %}" height="30" width="30" alt="run"></a>
+                    <a class="digital__process-first-run action" href="#"><img src="{% static 'interface/img/svg/run.svg' %}" height="30" width="30" alt="run"></a>
                     <a class="digital__process-stop action" href="#"><img src="{% static 'interface/img/svg/stop.svg' %}" height="30" width="30" alt="stop"></a>
                     <a class="digital__process-back action" href="#"><img src="{% static 'interface/img/svg/back.svg' %}" height="30" width="30" class="back"></a>
                     <a class="digital__process-next action" href="#"><img src="{% static 'interface/img/svg/next.svg' %}" height="30" width="30" class="next"></a>
                     <a class="digital__process-delete action" href="#"><img src="{% static 'interface/img/svg/delete.svg' %}" height="30" width="30" class="delete"></a>
                   </div>
-                  <button class="button digital__button digital__process-action-button button-photo-1">готово</button>
+                    {% csrf_token %}
+                  <button class="button digital__button digital__process-action-button button-photo-1" onclick="switchToNextForm(event)" >готово</button>
                 </div>
               </fieldset>
             </form>
+          </div>
+          <div id="content2">
             <form class="digital__process-form-photo-front" action="#" method="post">
                 {% csrf_token %}
                 <fieldset class="digital__process-fieldset-photo-front">
                     <div class="digital__process-input-wrapper">
                         <label class="digital__process-input-label" for="photo-front">2. Лицевая сторона (название и артикул запчасти)</label> <br>
                         <div class="process_wrapper">
-                        <progress max="100" value="50"></progress>
+                        <progress id="frontProgressBar" max="100" value="0"></progress>
                         <input class="digital__checkbox checkbox-front" type="checkbox" name="done" id="photo-front">
                         </div>
                     </div>
                     <div class="process_wrapper">
                       <div class="digital__process-actions">
-                        <a class="digital__process-front-run action" href="#"><img src="{% static 'interface/img/svg/run.svg' %}" height="30" width="30" alt="run"></a>
+                        <a class="digital__process-front-run digital__process-run action" href="#" data-value='F'><img src="{% static 'interface/img/svg/run.svg' %}" height="30" width="30" alt="run" ></a>
                         <a class="digital__process-front-stop action" href="#"><img src="{% static 'interface/img/svg/stop.svg' %}" height="30" width="30" alt="stop"></a>
                         <a class="digital__process-front-back action" href="#"><img src="{% static 'interface/img/svg/back.svg' %}" height="30" width="30" class="back"></a>
                         <a class="digital__process-front-next action" href="#"><img src="{% static 'interface/img/svg/next.svg' %}" height="30" width="30" class="next"></a>
                         <a class="digital__process-front-delete action" href="#"><img src="{% static 'interface/img/svg/delete.svg' %}" height="30" width="30" class="delete"></a>
                       </div>
-                          <button class="button digital__button digital__process-action-button button-photo-2">готово</button>
+                        {% csrf_token %}
+                          <button class="button digital__button digital__process-action-button button-photo-2" onclick="switchToNextForm(event)" >готово</button>
                       </div>
                 </fieldset>
             </form>
-            <p class="visually-hidden">Значение переменной: <span id="resultValue"></span></p>
+          </div>
+
+          <div id="content3">
+           <p class="visually-hidden">Значение переменной: <span id="resultValue"></span></p>
             <form class="digital__process-form-rear" action="#" method="post">
+                {% csrf_token %}
                 <fieldset class="digital__process-fieldset-rear">
                     <div class="digital__process-input-wrapper">
                         <label class="digital__process-input-label" for="photo-rear">3. Тыльная сторона (название и артикул запчасти)</label> <br>
                         <div class="process_wrapper">
-                        <progress max="100" value="0"></progress>
+                        <progress max="100" value="0"  id="rearProgressBar"></progress>
                         <input class="digital__checkbox checkbox-rear" type="checkbox" name="done" id="photo-rear">
                         </div>
                     </div>
                     <div class="process_wrapper">
                       <div class="digital__process-actions">
-                        <a class="digital__process-run action" href="#"><img src="{% static 'interface/img/svg/run.svg' %}" height="30" width="30" alt="run"></a>
+                        <a class="digital__process-rear-run digital__process-run action" href="#" data-value='R'><img src="{% static 'interface/img/svg/run.svg' %}" height="30" width="30" alt="run"></a>
                         <a class="digital__process-stop action" href="#"><img src="{% static 'interface/img/svg/stop.svg' %}" height="30" width="30" alt="stop"></a>
                         <a class="digital__process-back action" href="#"><img src="{% static 'interface/img/svg/back.svg' %}" height="30" width="30" class="back"></a>
                         <a class="digital__process-next action" href="#"><img src="{% static 'interface/img/svg/next.svg' %}" height="30" width="30" class="next"></a>
                         <a class="digital__process-delete action" href="#"><img src="{% static 'interface/img/svg/delete.svg' %}" height="30" width="30" class="delete"></a>
                       </div>
-                          <button class="button digital__button digital__process-action-button button-photo-3">готово</button>
+                        {% csrf_token %}
+                          <button class="button digital__button digital__process-action-button button-photo-3" onclick="switchToNextForm(event)" >готово</button>
                       </div>
                 </fieldset>
             </form>
-            <form class="digital__process-form-photo-other" action="#" method="post">
+          </div>
+           <div id="content4">
+             <form class="digital__process-form-photo-other" action="#" method="post">
+                {% csrf_token %}
                 <fieldset class="digital__process-fieldset-photo-other">
                     <div class="digital__process-input-wrapper">
                         <label class="digital__process-input-label" for="photo-other">4. Дополнительные фото (название и артикул запчасти)</label> <br>
                         <div class="process_wrapper">
-                        <progress max="100" value="0"></progress>
+                        <progress max="100" value="0" id="otherProgressBar"></progress>
                         <input class="digital__checkbox checkbox-photo-other" type="checkbox" name="done" id="photo-other">
                         </div>
                     </div>
                     <div class="process_wrapper">
                       <div class="digital__process-actions">
-                        <a class="digital__process-run action" href="#"><img src="{% static 'interface/img/svg/run.svg' %}" height="30" width="30" alt="run"></a>
+                        <a class="digital__process-other-run digital__process-run action" href="#" data-value='O'><img src="{% static 'interface/img/svg/run.svg' %}" height="30" width="30" alt="run"></a>
                         <a class="digital__process-stop action" href="#"><img src="{% static 'interface/img/svg/stop.svg' %}" height="30" width="30" alt="stop"></a>
                         <a class="digital__process-back action" href="#"><img src="{% static 'interface/img/svg/back.svg' %}" height="30" width="30" class="back"></a>
                         <a class="digital__process-next action" href="#"><img src="{% static 'interface/img/svg/next.svg' %}" height="30" width="30" class="next"></a>
                         <a class="digital__process-delete action" href="#"><img src="{% static 'interface/img/svg/delete.svg' %}" height="30" width="30" class="delete"></a>
                       </div>
-                          <button class="button digital__button digital__process-action-button button-photo-4">готово</button>
+                        {% csrf_token %}
+                         <button class="button digital__button digital__process-action-button button-photo-4" onclick="switchToNextForm(event)" >готово</button>
                       </div>
                 </fieldset>
-            </form>
+             </form>
+           </div>
         </section>
         <section class="digital__camera">
             <form class="digital__camera-form" action="#" method="post">
                 {% csrf_token %}
                 <p class="digital__camera-heading">Экран камеры</p>
                     <div class="digital_video-wrapper">
-                        <div class="digital_video-1">
-                          <img src="{% url 'interface:stream_video' %}" id="video"  width="320" height="240">
-                          <a class="digital_video-full-1" href="#" onclick="openFullscreen();"><img src="{% static 'interface/img/svg/full_screen.svg' %}" width="40" height="40"></a>
-                        </div>   
-                        <div class="digital_video-2">
-                            <img  src="{% url 'stream_video' %}" width="320" height="240">
-                            <a class="digital_video-full-2" href="#"><img  src="./img/full_screen.svg" width="40" height="40"></a>
+                          <div class="digital_video-1">
+                            <img src="{% url 'interface:stream_video' %}?camera=4" id="video1" width="320" height="240">
+                            <a class="digital_video-full-1" href="#" onclick="openFullscreen('video1');"><img src="{% static 'interface/img/svg/full_screen.svg' %}" width="40" height="40"></a>
+                          </div>
+                          <div class="digital_video-2">
+                            <img src="{% url 'interface:stream_video' %}?camera=1" id="video2" width="320" height="240">
+                            <a class="digital_video-full-2" href="#" onclick="openFullscreen('video2');"><img src="{% static 'interface/img/svg/full_screen.svg' %}" width="40" height="40"></a>
                           </div>
                           <div class="digital_video-3">
-                            <img  src="{% url 'stream_video' %}" width="320" height="240">
-                            <a class="digital_video-full-3" href="#"><img  src="./img/full_screen.svg" width="40" height="40"></a>
+                            <img src="{% url 'interface:stream_video' %}?camera=3" id="video3" width="320" height="240">
+                            <a class="digital_video-full-3" href="#" onclick="openFullscreen('video3');"><img src="{% static 'interface/img/svg/full_screen.svg' %}" width="40" height="40"></a>
                           </div>
                           <div class="digital_video-4">
-                            <img  src="{% url 'stream_video' %}" width="320" height="240">
-                            <a class="digital_video-full-4" href="#"><img  src="./img/full_screen.svg" width="40" height="40"></a>
-                          </div>          
-                        </div>  
+                            <img src="{% url 'interface:stream_video' %}?camera=5" id="video4" width="320" height="240">
+                            <a class="digital_video-full-4" href="#" onclick="openFullscreen('video4');"><img src="{% static 'interface/img/svg/full_screen.svg' %}" width="40" height="40"></a>
+                          </div>
+                        </div>
                 <div class="digital__camera-option">
                     <div class="digital__camera-buttons process_wrapper">
                         {% csrf_token %}
-                        <button class="button digital__button digital__camera-button">Переснять всё</button>
+                        <button class="button digital__button digital__camera-button" onclick="softReload(event)">Перезагрузить</button>
                         <button class="button digital__button digital-button__record digital__camera-button ">Запись на диск</button>
                     </div>
                     <div class="digital__camera-progress ">
-                        <progress max="100" value="0"></progress> 
+                        <progress max="100" value="0"></progress>
                     </div>
                     <div class="digital__camera-next ">
-                        <a class="button digital__button digital__camera-button" href="#">Перейти к следующей запчасти</a>
+                        <a class="button digital__button digital__camera-button" onclick="softReload(event)">Перейти к следующей запчасти</a>
                     </div>
                 </div>
-            </form>       
+            </form>
         </section>
+
     </main>
     {% endblock %}
 
@@ -183,20 +200,39 @@
         });
     }
 
-    // Обработчик события изменения input поля
-    $("#current_article_number").on('keydown', function(event) {
-        if (event.key === "Enter") {
-            event.preventDefault();
-            var value = $(this).val();
-            updateValue(value); // Вызов функции для отправки значения на сервер
+    function showModal(message, checkboxId) {
+    var modal = document.createElement("div");
+    modal.className = "modal";
+    modal.innerHTML = `
+      <div class="modal-content">
+        <p>${message}</p>
+        <button class="modal-ok-button" name="ok_button">OK</button>
+      </div>
+    `;
+    document.body.appendChild(modal);
 
-            // Активация чекбокса "article"
-            articleCheckbox.checked = value !== "";
-        }
+    var modalOkButton = modal.querySelector(".modal-ok-button");
+    modalOkButton.addEventListener("click", function() {
+      // Активируем чекбокс "photo"
+      var checkbox = document.getElementById(checkboxId);
+      checkbox.checked = true;
+      console.log("Modal shown. Checkbox ID:", checkboxId);
+
+      // Make an AJAX request to save the screenshot
+      var xhr = new XMLHttpRequest();
+      xhr.open('POST', '/interface/save_screenshot/');
+      xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+      var formData = new FormData();
+      formData.append('current_article_number', current_article_number);
+      xhr.send(formData);
+
+      console.log("Отправленное значение current_article_number:", current_article_number);
+
+      // Удаляем модальное окно
+      modal.parentNode.removeChild(modal);
     });
+  }
 
-    // Получаем ссылку на чекбокс "article"
-    var articleCheckbox = document.getElementById("checkbox-article");
     function sendFilesToServer() {
     // Асинхронный POST-запрос к серверу
     fetch('/send_files/', {
@@ -219,7 +255,7 @@
 
   // Функция для переключения класса current-point
   function switchToNextForm(event) {
-          event.preventDefault(); 
+          event.preventDefault();
           const currentForm = document.querySelector('.current-point');
           if (currentForm.classList.contains('digital__process-form-photo')) {
             currentForm.classList.remove('current-point');
@@ -240,5 +276,166 @@
 
           }
         }
+
+
+// Функция для получения значения CSRF-токена из куков
+function getCookie(name) {
+  var cookieValue = null;
+  if (document.cookie && document.cookie !== '') {
+    var cookies = document.cookie.split(';');
+    for (var i = 0; i < cookies.length; i++) {
+      var cookie = cookies[i].trim();
+      if (cookie.substring(0, name.length + 1) === (name + '=')) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+}
+
+
+
+function fillProgressBar(progressBar, checkbox) {
+  progressBar.value = 0; // Устанавливаем начальное значение 0
+
+  const duration = 23000; // Время заполнения в миллисекундах (23 секунды)
+
+  const startTime = Date.now();
+  function updateProgressBar() {
+    const currentTime = Date.now();
+    const elapsedTime = currentTime - startTime;
+    const progress = Math.min(100, (elapsedTime / duration) * 100);
+    progressBar.value = progress;
+
+    if (progress < 100) {
+      requestAnimationFrame(updateProgressBar);
+    } else {
+      // Автоматически активируем чекбокс, когда достигнем 100%
+      checkbox.checked = true;
+    }
+  }
+
+  // Начинаем анимацию заполнения
+  requestAnimationFrame(updateProgressBar);
+}
+
+
+function softReload(event) {
+  event.preventDefault(); // Предотвращаем стандартное поведение кнопки при клике
+  $.ajax({
+    url: window.location.href, // отправляем AJAX запрос на текущую страницу
+    type: 'GET',
+    beforeSend: function () {
+      // Этот код выполняется перед отправкой запроса
+      // Можно добавить анимацию загрузки или что-то подобное
+    },
+    success: function (data) {
+      console.log('Response data:', data); // Посмотреть ответ от сервера
+      // Этот код выполняется при успешном получении данных от сервера
+      // Обновляем только часть контента страницы
+
+      // Обновление контента для content1
+      var newContent1 = $(data).find('#content1'); // предполагается, что контент страницы находится в элементе с id="content1"
+      $('#content1').html(newContent1.html());
+
+      // Обновление контента для content2
+      var newContent2 = $(data).find('#content2'); // предполагается, что контент страницы находится в элементе с id="content2"
+      $('#content2').html(newContent2.html());
+
+      // Обновление контента для content3
+      var newContent3 = $(data).find('#content3'); // предполагается, что контент страницы находится в элементе с id="content3"
+      $('#content3').html(newContent3.html());
+
+      // Обновление контента для content4
+      var newContent4 = $(data).find('#content4'); // предполагается, что контент страницы находится в элементе с id="content4"
+      $('#content4').html(newContent4.html());
+
+      setupEventHandlers(); // Переустанавливаем обработчики событий для новых элементов формы после мягкой перезагрузки
+    },
+    error: function () {
+      // Этот код выполняется, если возникла ошибка при отправке запроса
+      alert('Произошла ошибка при загрузке данных.');
+    }
+  });
+}
+
+
+function setupEventHandlers() {
+  // Обработчик события изменения input поля
+  $("#current_article_number").on('keydown', function(event) {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      var value = $(this).val();
+      updateValue(value); // Вызов функции для отправки значения на сервер
+
+      // Активация чекбокса "article"
+      var articleCheckbox = document.getElementById("checkbox-article");
+      articleCheckbox.checked = value !== "";
+    }
+    // Получаем ссылку на чекбокс "article"
+
+  });
+   var runButton = document.querySelector(".digital__process-first-run");
+   runButton.addEventListener("click", function(event) {
+    event.preventDefault();
+
+    // Отображаем модальное окно и активируем чекбокс "photo"
+    showModal("Сфотографируйте артикул детали", "photo");
+  });
+   // Добавляем обработчик события на клик по первой кнопке
+    const button1 = document.querySelector('.digital__process-front-run');
+    const progressBar1 = document.querySelector('progress');
+    const checkbox1 = document.querySelector('.checkbox-front');
+    button1.addEventListener('click', () => fillProgressBar(progressBar1, checkbox1));
+
+    // Добавляем обработчик события на клик по второй кнопке
+    const button2 = document.querySelector('.digital__process-rear-run');
+    const progressBar2 = document.getElementById('rearProgressBar');
+    const checkbox2 = document.getElementById('photo-rear');
+    button2.addEventListener('click', () => fillProgressBar(progressBar2, checkbox2));
+
+    // Добавляем обработчик события на клик по третьей кнопке
+    const button3 = document.querySelector('.digital__process-other-run');
+    const progressBar3 = document.getElementById('otherProgressBar');
+    const checkbox3 = document.getElementById('photo-other');
+    button3.addEventListener('click', () => fillProgressBar(progressBar3, checkbox3));
+
+  // Обработчик нажатия на элемент <a> с классом digital__process-run
+  $('.digital__process-run').click(function(event) {
+    event.preventDefault();
+
+    // Получаем значение кнопки, на которую нажали ('F', 'R' или 'O')
+    var buttonValue = $(this).data('value');
+
+    // Получаем CSRF-токен
+    var csrfToken = getCookie('csrftoken');
+
+    // AJAX-запрос к серверу
+    $.ajax({
+      url: '/interface/capture_frames/', // Укажите здесь URL вашей Django-вьюхи capture_frames
+      type: 'POST', // Может быть POST или GET в зависимости от вашей настройки в Django
+      data: { 'front_value': buttonValue }, // Передаем значение кнопки в качестве параметра
+      headers: {
+        'X-CSRFToken': csrfToken, // Добавляем CSRF-токен в заголовки запроса
+      },
+      success: function(response) {
+        // Выводим сообщение об успешном выполнении запроса, если нужно
+        console.log('Запрос успешно выполнен.');
+      },
+      error: function(error) {
+        // Выводим сообщение об ошибке, если нужно
+        console.log('Произошла ошибка при выполнении запроса.');
+      }
+    });
+  });
+}
+
+
+
+// Вызываем функцию для установки обработчиков событий при инициализации страницы
+$(document).ready(function() {
+  setupEventHandlers();
+});
 </script>
 

@@ -6,75 +6,85 @@ from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 import paramiko
 import os
+from queue import Queue
+import numpy as np
 
 # Глобальные переменные
-last_frame = None
+camera_numbers = [1, 2, 3, 4]
 folder_number = 1
 screenshot_counter = 1
 value = None
+# Добавьте словарь для хранения последних кадров с каждой камеры
+last_frames = {}
 
-
-async def capture_frames(request):
-    frame_interval = 0.1
-    max_time = 30
-    start_time = time.time()
-    i = 0
-
-    while (time.time() - start_time) < max_time:
-        i += 1
-
-        # Ожидаем получения нового кадра из генератора
-        await asyncio.sleep(frame_interval)
-
-        # Получаем последний доступный кадр из глобальной переменной
-        frame = last_frame
-        next_value = value
-
-        if frame is None:
-            continue
-
-        color_file_path = f'D:/digital/{next_value}/{next_value}_{i}.jpg'
-        cv2.imwrite(color_file_path, frame)
-
-    return JsonResponse({'success': True})
-
-@csrf_exempt
-def capture_frames_view(request):
-    if request.method == 'POST':
-        # Вызов функции для захвата кадров с веб-камеры через асинхронный вызов
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(capture_frames(request))
-
-        # Возврат ответа для подтверждения успешного выполнения запроса
-        return JsonResponse({'success': True})
-    return JsonResponse({'success': False, 'error': 'Метод должен быть POST.'}, status=400)
 def stream_video(request):
-    # Открываем видеопоток с веб-камеры
-    cap = cv2.VideoCapture(1)
+    camera = int(request.GET.get('camera', 1))
+
+    # Открываем видеопоток с указанной камеры
+    cap = cv2.VideoCapture(camera)
 
     # Установка разрешения видео
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
 
     def generate_frames():
-        global last_frame
-        while True:
-            ret, frame = cap.read()
+        try:
+            while True:
+                ret, frame = cap.read()
 
-            if not ret:
-                break
+                if not ret:
+                    break
 
-            # Обновляем последний кадр
-            last_frame = frame
+                # Преобразуем кадр в формат JPEG
+                _, jpeg = cv2.imencode('.jpg', frame)
 
-            # Преобразуем кадр в формат JPEG
-            _, jpeg = cv2.imencode('.jpg', frame)
+                # Сохраняем последний кадр в словаре
+                last_frames[camera] = frame
 
-            # Возвращаем кадр как генератор байтовых данных
-            yield (b'--frame\r\n'
-                   b'Content-Type: image/jpeg\r\n\r\n' + jpeg.tobytes() + b'\r\n\r\n')
+                # Возвращаем кадр как генератор байтовых данных
+                yield (b'--frame\r\n'
+                       b'Content-Type: image/jpeg\r\n\r\n' + jpeg.tobytes() + b'\r\n\r\n')
+        except GeneratorExit:
+            # При выходе из генератора освобождаем ресурсы камеры
+            cap.release()
+        except Exception as e:
+            # Обрабатываем другие исключения, если необходимо
+            print("Error:", e)
+            cap.release()
 
     return StreamingHttpResponse(generate_frames(), content_type='multipart/x-mixed-replace; boundary=frame')
+
+async def capture_frames(request):
+    frame_interval = 0.35
+    max_time = 22.5
+    start_time = time.time()
+    i = 0
+
+    position_value = request.POST.get('front_value')
+    while (time.time() - start_time) < max_time:
+        i += 1
+
+        # Ожидаем получения нового кадра из каждого видеопотока
+        await asyncio.sleep(frame_interval)
+
+        # Получаем последний доступный кадр из каждого видеопотока
+        frame1 = last_frames[4]
+        frame2 = last_frames[1]
+        frame3 = last_frames[3]
+        frame4 = last_frames[5]
+
+        # Сохраняем кадр в папке с именем `value`
+        cv2.imwrite(f'D:/digital/{value}/{value}_{position_value}_{i}_1.jpg', frame1)
+        cv2.imwrite(f'D:/digital/{value}/{value}_{position_value}_{i}_2.jpg', frame2)
+        cv2.imwrite(f'D:/digital/{value}/{value}_{position_value}_{i}_3.jpg', frame3)
+        cv2.imwrite(f'D:/digital/{value}/{value}_{position_value}_{i}_4.jpg', frame4)
+
+    return JsonResponse({'success': True})
+
+
+
+
+
 
 @csrf_exempt
 def example_view(request):
@@ -82,97 +92,105 @@ def example_view(request):
     if request.method == 'POST':
         value = request.POST.get('value')
         print(value)
-        # Здесь вы можете сохранить значение в переменную или делать с ним, что вам нужно
-        # Например, сохранить в переменную в вашей view или в базу данных
+
         # value = ...  # Ваши действия с переменной value
         return JsonResponse({'success': True})  # Возвращаем JSON с подтверждением
     return render(request, 'interface/digital_camera.html')
 
 @csrf_exempt
 def save_screenshot(request):
-    global last_frame, folder_number, screenshot_counter, value
+    global folder_number, screenshot_counter, value
 
+    # Открываем видеопоток с первой камеры
+    camera = 1
+    cap = cv2.VideoCapture(camera)
 
-    # Get the last frame of the video stream
-    frame = last_frame
+    # Установка разрешения видео
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
 
-    # Create a folder if it doesn't exist
-    folder_name = f"{value}"
-    temp_dir = "D:/digital"  # Replace 'temp_dir' with the desired temporary directory path
-    folder_path = os.path.join(temp_dir, folder_name)
-    os.makedirs(folder_path, exist_ok=True)
+    # Читаем кадр из видеопотока
+    ret, frame = cap.read()
 
-    # Save the frame as an image file with a unique name, including the article number if available
-    if value:
-        filename = f"article_{screenshot_counter}_{value}.jpg"
+    # Освобождаем ресурсы камеры
+    cap.release()
+
+    # Если получен кадр, сохраняем его как изображение
+    if ret:
+        # Create a folder if it doesn't exist
+        folder_name = f"{value}"
+        temp_dir = "D:/digital"  # Replace 'temp_dir' with the desired temporary directory path
+        folder_path = os.path.join(temp_dir, folder_name)
+        os.makedirs(folder_path, exist_ok=True)
+
+        # Save the frame as an image file with a unique name, including the article number if available
+        if value:
+            filename = f"article_{screenshot_counter}_{value}.jpg"
+        else:
+            filename = f"article_{screenshot_counter}.jpg"
+
+        filepath = os.path.join(folder_path, filename)
+        cv2.imwrite(filepath, frame)
+
+        # Increment the screenshot counter
+        screenshot_counter += 1
+
+        # If the 'OK' button is clicked in the modal dialog, create a new folder for the next screenshots
+        if request.POST.get('button') == 'OK':
+            folder_number += 1
+            screenshot_counter = 1
+
+        # Return a response indicating success
+        return HttpResponse('Screenshot saved successfully.')
     else:
-        filename = f"article_{screenshot_counter}.jpg"
+        return HttpResponse('Failed to capture a frame from camera 1.')
 
-    filepath = os.path.join(folder_path, filename)
-    cv2.imwrite(filepath, frame)
-
-    # Increment the screenshot counter
-    screenshot_counter += 1
-
-    # If the 'OK' button is clicked in the modal dialog, create a new folder for the next screenshots
-    if request.POST.get('button') == 'OK':
-        folder_number += 1
-        screenshot_counter = 1
-
-    # Return a response indicating success
-    return HttpResponse('Screenshot saved successfully.')
 @csrf_exempt
 def send_files_to_server(request):
     local_path = "D:/digital"
     server_ip = "95.163.233.68"
     server_login = "root"
     server_password = "Mrhk%3+#yuqx"
-    remote_path = "/digital/" # Замените на путь назначения на сервере
+    remote_path = "/var/Foto/"
 
-    # Создаем SSH-клиент
+    # Create SSH client
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
     try:
-        # Устанавливаем соединение с сервером
+        # Connect to server
         ssh.connect(server_ip, username=server_login, password=server_password)
 
-        # Создаем удаленную папку назначения, если она не существует
-        stdin, stdout, stderr = ssh.exec_command(f"mkdir -p {remote_path}")
-        if stderr.readlines():
-            print(f"Не удалось создать папку {remote_path}")
+        # Create remote destination folder if it does not exist
+        ssh.exec_command(f"mkdir -p {remote_path}")
 
-        # Передаем файлы на сервер
         for root, dirs, files in os.walk(local_path):
             for file in files:
                 local_file_path = os.path.join(root, file)
-                remote_file_path = os.path.join(remote_path, root.replace(local_path, ""), file)
+                relative_path = os.path.relpath(local_file_path, local_path)
+                remote_file_path = os.path.join(remote_path, relative_path)
 
-                # Создаем удаленные директории, если они не существуют
-                stdin, stdout, stderr = ssh.exec_command(f"mkdir -p {os.path.dirname(remote_file_path)}")
-                if stderr.readlines():
-                    print(f"Не удалось создать папку {os.path.dirname(remote_file_path)}")
+                # Create remote directories if they do not exist
+                ssh.exec_command(f"mkdir -p {os.path.dirname(remote_file_path)}")
 
-                # Передаем файл
                 sftp = ssh.open_sftp()
                 sftp.put(local_file_path, remote_file_path)
                 sftp.close()
 
     except paramiko.AuthenticationException:
-        print("Ошибка аутентификации. Пожалуйста, проверьте учетные данные.")
-        return JsonResponse({'success': False, 'error': 'Ошибка аутентификации. Пожалуйста, проверьте учетные данные.'}, status=500)
+        print("Authentication error. Please check your credentials.")
+        return JsonResponse({'success': False, 'error': 'Authentication error. Please check your credentials.'},
+                            status=500)
     except paramiko.SSHException as ssh_exception:
-        print(f"Ошибка SSH: {ssh_exception}")
-        return JsonResponse({'success': False, 'error': f'Ошибка SSH: {ssh_exception}'}, status=500)
+        print(f"SSH error: {ssh_exception}")
+        return JsonResponse({'success': False, 'error': f'SSH error: {ssh_exception}'}, status=500)
     except Exception as e:
-        print(f"Произошла ошибка: {e}")
-        return JsonResponse({'success': False, 'error': f'Произошла ошибка: {e}'}, status=500)
+        print(f"Error: {e}")
+        return JsonResponse({'success': False, 'error': f'Error: {e}'}, status=500)
     finally:
         ssh.close()
 
-    # Возвращаем подтверждение об успешной отправке
     return JsonResponse({'success': True})
-
 
 
 def digital_camera(request):

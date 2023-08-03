@@ -169,6 +169,7 @@ progress {
   padding: 5px 10px;
 }
 
+
 .digital__camera {
   grid-area: B;
   align-self: stretch;
@@ -246,17 +247,7 @@ progress {
   right: 269px;
   top: 10px;
 }
-/*
-.digital_video {
-  position: relative;
-}
 
-.digital_video-full {
-  position: absolute;
-  right: 590px;
-  top: 10px;
-}
-*/
 .digital-button__record {
   color: #ffffff;
   background-color: red;
