@@ -1,0 +1,170 @@
+{% load static %}
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Экран проверки</title>
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <link rel="stylesheet" type="text/css" href="{% static 'interface/css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'interface/css/normalize.css' %}">
+    <script src="{% static 'interface/js/script.js' %}"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body class="body__control">
+    {% block content %}
+    <main class="site-main control">
+        <nav class="nav">
+            <ul class="nav__list">
+                <li class="nav__item "><a href="/index.html">Экран оцифровки запчасти</a></li>
+                <li class="nav__item"><a href="/auto-parts.html">Список запчастей</a></li>
+                <li class="nav__item current-page"><a href="#">Экран проверки</a></li>
+                <li class="nav__item"><a href="/login.html">Выход</a></li>
+            </ul>
+        </nav>
+        <h1 class="visually-hidden">Экран оцифровки запчасти</h1>
+        <section class="control__process">
+            <div class="control__user process_wrapper">
+                <div class="control__user-name">Пользователь: Иванов ИИ</div>
+                <div class="control__user-task"><a class="button control__button control__user-task-link button-show" href="#">Задание оператору</a></div>
+            </div>
+            <form class="control_form-article" action="#" method="post">
+                <fieldset class="control__fieldset-textarea" style="height: 200px; overflow: auto;">
+                 <div class="">
+                    <p>Дата оцифровки:<input type="date"></p>
+                    <ol >
+                        <li></li>
+                        <li></li>
+                        <li></li>
+                    </ol>
+
+                </div>
+                </fieldset>
+                <fieldset class="current-point">
+                     <p>1. Проверка артикула </p>
+                    <div class="process-evenly_wrapper">
+                    <button class="button control__button control__button-agree" >совпадает</button>
+                    <button class="button control__button control__button-disagree">не совпадает</button>
+                    <label class="control__process-input-label-article" for="article"></label>
+                    <input class="control__checkbox checkbox-article" type="checkbox" name="done" id="article">
+                    </div>
+                </fieldset>
+                </form>
+                <form class="control__process-form-photo" action="#" method="post">
+                    <fieldset>
+                       <p>2. Качество фотоматериала</p>
+                       <div class="process_wrapper">
+                        <label class="control__process-input-label-article" for="">2.1. фото артикула</label>
+                        <input class="control__checkbox checkbox-article" type="checkbox" name="" id="">
+                        <button class="button control__button control__button-disagree">переснять</button>
+                       </div>
+                       <div class="process_wrapper">
+                        <label class="control__process-input-label-article" for="">2.2. лицевая часть</label>
+                        <input class="control__checkbox checkbox-article" type="checkbox" name="" id="">
+                        <button class="button control__button control__button-disagree">переснять</button>
+                       </div>
+                       <div class="process_wrapper">
+                        <label class="control__process-input-label-article" for="">2.3. тыльная часть</label>
+                        <input class="control__checkbox checkbox-article" type="checkbox" name="" id="">
+                        <button class="button control__button control__button-disagree">переснять</button>
+                       </div>
+                       <div class="process_wrapper">
+                        <label class="control__process-input-label-article" for="">2.4. доп. фотографии</label>
+                        <input class="control__checkbox checkbox-article" type="checkbox" name="" id="">
+                        <button class="button control__button control__button-disagree">переснять</button>
+                       </div>
+                    </fieldset>
+                    <fieldset>
+                        <div class="process_wrapper">
+                        <p>3. Следующая деталь</p>
+                        <div class="button_padding-right">
+                        <a class="control__process-back" href="#"><img src="./img/back.svg" height="45" width="45" alt="back"></a>
+                        <a class="control__process-next" href="#"><img src="./img/next.svg" height="45" width="45" alt="next"></a>
+                        </div>
+                        </div>
+                    </fieldset>
+                    <fieldset class="process_wrapper">
+                        <p>4. Отчет по проверки</p>
+                        <button class="button control__button control__button-finish">Распечатать и отправить<br> Задание оператору </button>
+                    </fieldset>
+                </form>
+        </section>
+        <section class="control__camera">
+            <form class="control__camera-form" action="#" method="post">
+                <p class="control__camera-heading">Экран камеры</p>
+                <div class="control_video-wrapper">
+                    <div class="control_video-1">
+                      <img  src="{% url 'stream_video' %}" width="320" height="240">
+                      <a class="control_video-full-1" href="#"><img  src="./img/full_screen.svg" width="40" height="40"></a>
+                    </div>   
+                    <div class="control_video-2">
+                        <img  src="{% url 'stream_video' %}" width="320" height="240">
+                        <a class="control_video-full-2" href="#"><img  src="./img/full_screen.svg" width="40" height="40"></a>
+                      </div>
+                      <div class="control_video-3">
+                        <img  src="{% url 'stream_video' %}" width="320" height="240">
+                        <a class="control_video-full-3" href="#"><img  src="./img/full_screen.svg" width="40" height="40"></a>
+                      </div>
+                      <div class="control_video-4">
+                        <img  src="{% url 'stream_video' %}" width="320" height="240">
+                        <a class="control_video-full-4" href="#"><img  src="./img/full_screen.svg" width="40" height="40"></a>
+                      </div>          
+                    </div>              
+            </form>       
+        </section>
+        <section class="modal-page modal-control">
+            <form class="control-form" action="#" method="post">
+              <div class="wrapper-modal">
+                <div class="modal_input">
+                   <label for="modal-article">Артикул</label>
+                   <input class="control-modal-article" type="text" name="modal-article" id="modal-article" placeholder="6RU 987 986 1" autofocus=""> 
+                </div>
+                <div class="modal_input">
+                    <label for="modal-name">Название</label>
+                    <input class="control-modal-name" type="text" name="modal-name" id="modal-name" placeholder="Крыло переднее правое" autofocus="">
+                </div>
+                <div class="modal_input">
+                   <label for="modal-place">Место</label>
+                <input class="control-modal-place" type="text" name="modal-place" id="modal-place" placeholder="3с-34-2-1" autofocus=""> 
+                </div>
+               </div> 
+               <div class="button_modal-submit">
+                <button class="button" type="submit">Отправить</button>
+               </div>
+               <a class="modal-close button-hide" type="button" aria-label="Закрыть"></a>
+              </form>
+          </section>
+    </main>
+    {% endblock %}
+    <script>
+        const modalControl = document.querySelector('.modal-control');
+        const openModalControl = document.querySelector('.button-show');
+        const closeModalControl  = modalControl.querySelector('.button-hide');
+        let isStorageSupport = true;
+        let storage = "";
+
+try {
+  storage = localStorage.getItem("modal-article");
+} catch (err) {
+  isStorageSupport = false;
+};
+
+openModalControl.addEventListener('click', function(evt) {
+  evt.preventDefault();
+  modalControl.classList.add('modal-open');
+
+});
+
+closeModalControl.addEventListener('click', function(evt) {
+  evt.preventDefault();
+  modalControl.classList.remove('modal-open');
+});
+
+
+document.addEventListener('keydown', function(evt){
+  if (evt.keyCode === 27){
+    modalControl.classList.remove('modal-open');
+    }
+});
+    </script>
+</body>
+</html>
