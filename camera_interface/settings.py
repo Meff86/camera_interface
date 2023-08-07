@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'interface',
     'django.contrib.postgres',
+    'corsheaders',
 
 ]
 
@@ -56,6 +57,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
 
 ]
 
@@ -100,7 +102,10 @@ DATABASES = {
         "PASSWORD": POSTGRES_PASSWORD,
     }
 }
-
+CORS_ALLOWED_ORIGINS = [
+    "http://127.0.0.1:8000",  # Замените этот URL на URL вашего фронтенд-сервера
+    # Добавьте другие разрешенные домены, если необходимо
+]
 
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
@@ -148,3 +153,12 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 LOGIN_URL = 'user:login'
 LOGOUT_URL = 'user:logout'
+
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]

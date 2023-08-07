@@ -15,16 +15,16 @@
     <main class="site-main control">
         <nav class="nav">
             <ul class="nav__list">
-                <li class="nav__item "><a href="/index.html">Экран оцифровки запчасти</a></li>
-                <li class="nav__item"><a href="/auto-parts.html">Список запчастей</a></li>
-                <li class="nav__item current-page"><a href="#">Экран проверки</a></li>
-                <li class="nav__item"><a href="/login.html">Выход</a></li>
+                <li class="nav__item "><a href="{% url 'interface:digital_camera' %}">Экран оцифровки запчасти</a></li>
+                <li class="nav__item"><a href="#">Список запчастей</a></li>
+                <li class="nav__item current-page"><a href="{% url 'interface:control_page' %}">Экран проверки</a></li>
+                <li class="nav__item"><a href="{% url 'user:logout' %}">Выход</a></li>
             </ul>
         </nav>
         <h1 class="visually-hidden">Экран оцифровки запчасти</h1>
         <section class="control__process">
             <div class="control__user process_wrapper">
-                <div class="control__user-name">Пользователь: Иванов ИИ</div>
+                <div class="control__user-name">Пользователь: {{ request.user.first_name }} {{ request.user.last_name }}</div>
                 <div class="control__user-task"><a class="button control__button control__user-task-link button-show" href="#">Задание оператору</a></div>
             </div>
             <form class="control_form-article" action="#" method="post">
@@ -77,8 +77,8 @@
                         <div class="process_wrapper">
                         <p>3. Следующая деталь</p>
                         <div class="button_padding-right">
-                        <a class="control__process-back" href="#"><img src="./img/back.svg" height="45" width="45" alt="back"></a>
-                        <a class="control__process-next" href="#"><img src="./img/next.svg" height="45" width="45" alt="next"></a>
+                        <a class="control__process-back" href="#"><img src="{% static 'interface/img/svg/back.svg' %}" height="45" width="45" alt="back"></a>
+                        <a class="control__process-next" href="#"><img src="{% static 'interface/img/svg/next.svg' %}" height="45" width="45" alt="next"></a>
                         </div>
                         </div>
                     </fieldset>
@@ -93,30 +93,31 @@
                 <p class="control__camera-heading">Экран камеры</p>
                 <div class="control_video-wrapper">
                     <div class="control_video-1">
-                      <img  src="{% url 'stream_video' %}" width="320" height="240">
-                      <a class="control_video-full-1" href="#"><img  src="./img/full_screen.svg" width="40" height="40"></a>
+                      <img  src="{% url 'interface:stream_video' %}" width="320" height="240">
+                      <a class="control_video-full-1" href="#"><img  src="{% static 'interface/img/svg/full_screen.svg' %}" width="40" height="40"></a>
                     </div>   
                     <div class="control_video-2">
-                        <img  src="{% url 'stream_video' %}" width="320" height="240">
-                        <a class="control_video-full-2" href="#"><img  src="./img/full_screen.svg" width="40" height="40"></a>
+                        <img  src="{% url 'interface:stream_video' %}" width="320" height="240">
+                        <a class="control_video-full-2" href="#"><img  src="{% static 'interface/img/svg/full_screen.svg' %}" width="40" height="40"></a>
                       </div>
                       <div class="control_video-3">
-                        <img  src="{% url 'stream_video' %}" width="320" height="240">
-                        <a class="control_video-full-3" href="#"><img  src="./img/full_screen.svg" width="40" height="40"></a>
+                        <img  src="{% url 'interface:stream_video' %}" width="320" height="240">
+                        <a class="control_video-full-3" href="#"><img  src="{% static 'interface/img/svg/full_screen.svg' %}" width="40" height="40"></a>
                       </div>
                       <div class="control_video-4">
-                        <img  src="{% url 'stream_video' %}" width="320" height="240">
-                        <a class="control_video-full-4" href="#"><img  src="./img/full_screen.svg" width="40" height="40"></a>
+                        <img  src="{% url 'interface:stream_video' %}" width="320" height="240">
+                        <a class="control_video-full-4" href="#"><img  src="{% static 'interface/img/svg/full_screen.svg' %}" width="40" height="40"></a>
                       </div>          
                     </div>              
             </form>       
         </section>
         <section class="modal-page modal-control">
             <form class="control-form" action="#" method="post">
+                {% csrf_token %}
               <div class="wrapper-modal">
                 <div class="modal_input">
                    <label for="modal-article">Артикул</label>
-                   <input class="control-modal-article" type="text" name="modal-article" id="modal-article" placeholder="6RU 987 986 1" autofocus=""> 
+                   <input class="control-modal-article" type="text" name="modal-article" id="modal-article" placeholder="6RU 987 986 1" autofocus="">
                 </div>
                 <div class="modal_input">
                     <label for="modal-name">Название</label>
@@ -124,9 +125,9 @@
                 </div>
                 <div class="modal_input">
                    <label for="modal-place">Место</label>
-                <input class="control-modal-place" type="text" name="modal-place" id="modal-place" placeholder="3с-34-2-1" autofocus=""> 
+                <input class="control-modal-place" type="text" name="modal-place" id="modal-place" placeholder="3с-34-2-1" autofocus="">
                 </div>
-               </div> 
+               </div>
                <div class="button_modal-submit">
                 <button class="button" type="submit">Отправить</button>
                </div>
@@ -136,35 +137,74 @@
     </main>
     {% endblock %}
     <script>
-        const modalControl = document.querySelector('.modal-control');
-        const openModalControl = document.querySelector('.button-show');
-        const closeModalControl  = modalControl.querySelector('.button-hide');
-        let isStorageSupport = true;
-        let storage = "";
+    const modalControl = document.querySelector('.modal-control');
+    const openModalControl = document.querySelector('.button-show');
+    const closeModalControl  = modalControl.querySelector('.button-hide');
+    const form = modalControl.querySelector('.control-form');  // Выберите форму
 
-try {
-  storage = localStorage.getItem("modal-article");
-} catch (err) {
-  isStorageSupport = false;
-};
+    let isStorageSupport = true;
+    let storage = "";
 
-openModalControl.addEventListener('click', function(evt) {
-  evt.preventDefault();
-  modalControl.classList.add('modal-open');
+    try {
+      storage = localStorage.getItem("modal-article");
+    } catch (err) {
+      isStorageSupport = false;
+    };
 
-});
+    openModalControl.addEventListener('click', function(evt) {
+      evt.preventDefault();
+      modalControl.classList.add('modal-open');
+    });
 
-closeModalControl.addEventListener('click', function(evt) {
-  evt.preventDefault();
-  modalControl.classList.remove('modal-open');
-});
+    closeModalControl.addEventListener('click', function(evt) {
+      evt.preventDefault();
+      modalControl.classList.remove('modal-open');
+    });
 
+    document.addEventListener('keydown', function(evt){
+      if (evt.keyCode === 27){
+        modalControl.classList.remove('modal-open');
+      }
+    });
+    const inputs = form.querySelectorAll('input');
 
-document.addEventListener('keydown', function(evt){
-  if (evt.keyCode === 27){
-    modalControl.classList.remove('modal-open');
-    }
-});
-    </script>
+    inputs.forEach((input, index) => {
+      input.addEventListener('keydown', function(evt) {
+        if (evt.key === 'Enter') {
+          evt.preventDefault();
+          if (index < inputs.length - 1) {
+            inputs[index + 1].focus(); // Перенос фокуса на следующее поле
+          }
+        }
+      });
+    });
+
+    // Добавьте обработчик отправки формы
+    form.addEventListener('submit', function(evt) {
+      evt.preventDefault();
+
+      const formData = new FormData(form);
+      const xhr = new XMLHttpRequest();
+
+      xhr.open('POST', '{% url "interface:save_car_part" %}', true)
+      xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+
+      xhr.onreadystatechange = function() {
+        if (xhr.readyState === XMLHttpRequest.DONE) {
+          if (xhr.status === 200) {
+            const response = JSON.parse(xhr.responseText);
+            console.log(response.message);  // Можно добавить обработку успешного сообщения
+          // Закрытие модального окна и очистка формы
+            modalControl.classList.remove('modal-open');
+            form.reset();
+          } else {
+            console.error('Ошибка при сохранении данных.');
+          }
+        }
+      };
+
+      xhr.send(formData);
+    });
+</script>
 </body>
 </html>

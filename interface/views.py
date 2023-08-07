@@ -2,13 +2,16 @@ import cv2
 import time
 import asyncio
 from django.http import HttpResponse, StreamingHttpResponse, JsonResponse
-from django.shortcuts import render
-from django.views.decorators.csrf import csrf_exempt
+from django.shortcuts import render, redirect
+from django.views.decorators.csrf import csrf_exempt, csrf_protect
 import paramiko
 import os
+from .models import models
 from queue import Queue
 import numpy as np
-
+from .forms import CarPartForm
+from django.contrib.auth.decorators import user_passes_test
+from .models import CarPart
 # Глобальные переменные
 camera_numbers = [1, 2, 3, 4]
 folder_number = 1
@@ -195,4 +198,30 @@ def send_files_to_server(request):
 
 def digital_camera(request):
     return render(request, 'interface/digital_camera.html')
+
+@csrf_protect
+def control_page(request):
+    if request.user.groups.filter(name='Операторы').exists():
+        return redirect('interface:digital_camera')
+    return render(request, 'interface/control_page.html')
+
+
+
+def save_car_part(request):
+    if request.method == 'POST':
+        article_number = request.POST.get('modal-article')
+        name = request.POST.get('modal-name')
+        place = request.POST.get('modal-place')
+
+        # Создание объекта модели и сохранение в базу данных
+        new_entry = CarPart(article_number=article_number, name=name, place=place)
+        new_entry.save()
+
+        return JsonResponse({'message': 'Данные успешно сохранены.'})
+    else:
+        return JsonResponse({'message': 'Неверный метод запроса.'}, status=400)
+
+
+
+
 

@@ -12,4 +12,6 @@ urlpatterns = [
     path('example_view/', views.example_view, name='example_view'),
     path('capture_frames/', views.capture_frames, name='capture_frames'),
     path('send_files/', views.send_files_to_server, name='send_files'),
+    path('control/', views.control_page, name='control_page'),
+    path('save_car_part/', views.save_car_part, name='save_car_part'),
 ]

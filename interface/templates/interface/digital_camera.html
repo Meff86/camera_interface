@@ -17,16 +17,22 @@
             <ul class="nav__list">
                 <li class="nav__item current-page"><a href="#">Экран оцифровки запчасти</a></li>
                 <li class="nav__item"><a href="#">Список запчастей</a></li>
-                <li class="nav__item"><a href="#">Экран проверки</a></li>
+                <li class="nav__item"><a href="{% url 'interface:control_page' %}">Экран проверки</a></li>
                 <li class="nav__item"><a class="logout-button" href="{% url 'user:logout' %}">Выход</a></li>
             </ul>
         </nav>
         <h1 class="visually-hidden">Экран оцифровки запчасти</h1>
               <section class="digital__process">
-            <div class="digital__user process_wrapper">
-                <div class="digital__user-name">Пользователь: {{ request.user.last_name }} {{ request.user.first_name }}</div>
+            {% if request.user.is_authenticated %}
+                <div class="digital__user process_wrapper">
+                <div class="digital__user-name">Пользователь: {{ request.user.first_name }} {{ request.user.last_name }}</div>
                 <div class="digital__user-task"><a class="button digital__button digital__user-task-link" href="#">Задание!</a></div>
+                </div>
+                {% else %}
+            <div class="digital__user process_wrapper">
+                <div>Пользователь не авторизован. <a href="{% url 'user:login' %}">Войти</a></div>
             </div>
+            {% endif %}
             <p class="digital__process-sequence">Последовательность оцифровки:</p>
           <div id="content1">
             <form class="digital__process-form-photo current-point" action="" method="post">
