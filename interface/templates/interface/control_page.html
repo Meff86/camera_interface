@@ -28,14 +28,15 @@
                 <div class="control__user-task"><a class="button control__button control__user-task-link button-show" href="#">Задание оператору</a></div>
             </div>
             <form class="control_form-article" action="#" method="post">
+                {% csrf_token %}
                 <fieldset class="control__fieldset-textarea" style="height: 200px; overflow: auto;">
                  <div class="">
                     <p>Дата оцифровки:<input type="date"></p>
-                    <ol >
-                        <li></li>
-                        <li></li>
-                        <li></li>
-                    </ol>
+                     <ol>
+                        {% for value in example_list %}
+                        <li class="article-item" data-article="{{ value }}">{{ value }}</li>
+                        {% endfor %}
+                     </ol>
 
                 </div>
                 </fieldset>
@@ -92,10 +93,10 @@
             <form class="control__camera-form" action="#" method="post">
                 <p class="control__camera-heading">Экран камеры</p>
                 <div class="control_video-wrapper">
-                    <div class="control_video-1">
-                      <img  src="{% url 'interface:stream_video' %}" width="320" height="240">
-                      <a class="control_video-full-1" href="#"><img  src="{% static 'interface/img/svg/full_screen.svg' %}" width="40" height="40"></a>
-                    </div>   
+                    <div class="control_video-1" id="video-1">
+                        <img src="{% url 'interface:stream_video' %}" width="320" height="240">
+                        <a class="control_video-full-1" href="#"><img src="{% static 'interface/img/svg/full_screen.svg' %}" width="40" height="40"></a>
+                    </div>
                     <div class="control_video-2">
                         <img  src="{% url 'interface:stream_video' %}" width="320" height="240">
                         <a class="control_video-full-2" href="#"><img  src="{% static 'interface/img/svg/full_screen.svg' %}" width="40" height="40"></a>
@@ -107,9 +108,9 @@
                       <div class="control_video-4">
                         <img  src="{% url 'interface:stream_video' %}" width="320" height="240">
                         <a class="control_video-full-4" href="#"><img  src="{% static 'interface/img/svg/full_screen.svg' %}" width="40" height="40"></a>
-                      </div>          
-                    </div>              
-            </form>       
+                      </div>
+                    </div>
+            </form>
         </section>
         <section class="modal-page modal-control">
             <form class="control-form" action="#" method="post">
@@ -141,6 +142,7 @@
     const openModalControl = document.querySelector('.button-show');
     const closeModalControl  = modalControl.querySelector('.button-hide');
     const form = modalControl.querySelector('.control-form');  // Выберите форму
+
 
     let isStorageSupport = true;
     let storage = "";
@@ -205,6 +207,58 @@
 
       xhr.send(formData);
     });
+
+
+$(document).ready(function() {
+  $("ol li").click(function() {
+    var article = $(this).text();
+    $.ajax({
+      url: "{% url 'interface:get_photos_by_article' %}",
+      type: "GET",
+      data: { article_number: article },
+      dataType: "json",
+      success: function(response) {
+        // Обновляем первый блок с фотографией
+        updatePhotoBlock("video-1", response.photos[0]);
+      },
+      error: function(xhr, errmsg, err) {
+        console.log(xhr.status + ": " + xhr.responseText);
+      }
+    });
+  });
+});
+
+function updatePhotoBlock(blockId, photoUrl) {
+  $("#" + blockId + " img").attr("src", photoUrl);
+}$(document).ready(function() {
+  $("ol li").click(function() {
+    var article = $(this).text();
+    $.ajax({
+      url: "{% url 'interface:get_photos_by_article' %}",
+      type: "GET",
+      data: { article_number: article },
+      dataType: "json",
+      success: function(response) {
+        // Обновляем блоки с фотографиями
+        loadPhotosForArticle(response.photos);
+      },
+      error: function(xhr, errmsg, err) {
+        console.log(xhr.status + ": " + xhr.responseText);
+      }
+    });
+  });
+});
+
+function loadPhotosForArticle(photos) {
+  updatePhotoBlock("video-1", photos[0]);
+}
+
+function updatePhotoBlock(blockId, photoUrl) {
+  // Здесь photoUrl представляет ссылку на изображение в локальном хранилище
+  $("#" + blockId + " img").attr("src", photoUrl);
+}
+
+
 </script>
 </body>
 </html>

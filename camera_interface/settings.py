@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'interface',
     'django.contrib.postgres',
     'corsheaders',
+    'storages',
 
 ]
 
@@ -162,3 +163,12 @@ CORS_ALLOW_METHODS = [
     'POST',
     'PUT',
 ]
+
+DEFAULT_FILE_STORAGE = 'camera_interface.s3_storage.MediaStorage'
+STATICFILES_STORAGE = 'camera_interface.s3_storage.StaticStorage'
+
+AWS_S3_ENDPOINT_URL = os.getenv('AWS_S3_ENDPOINT_URL')
+AWS_S3_ACCESS_KEY_ID = os.getenv('AWS_S3_ACCESS_KEY_ID')
+AWS_S3_SECRET_ACCESS_KEY = os.getenv('AWS_S3_SECRET_ACCESS_KEY')
+AWS_STORAGE_BUCKET_NAME = os.getenv('AWS_STORAGE_BUCKET_NAME')
+AWS_QUERYSTRING_AUTH = False

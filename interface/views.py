@@ -6,12 +6,19 @@ from django.shortcuts import render, redirect
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
 import paramiko
 import os
-from .models import models
+from .models import CarPart, Photo
 from queue import Queue
 import numpy as np
 from .forms import CarPartForm
 from django.contrib.auth.decorators import user_passes_test
-from .models import CarPart
+import boto3
+from botocore.exceptions import NoCredentialsError
+AWS_S3_ACCESS_KEY_ID = 'YCAJED2HUj8DMX6N6ROlMjD4O'
+AWS_S3_SECRET_ACCESS_KEY = 'YCMZKYsIcf9dQN7MC_Hoe9-8mQhZcxusZb4VeZu1'
+AWS_STORAGE_BUCKET_NAME = 'meff1986'
+AWS_S3_ENDPOINT_URL = 'https://storage.yandexcloud.net'
+
+
 # Глобальные переменные
 camera_numbers = [1, 2, 3, 4]
 folder_number = 1
@@ -19,6 +26,14 @@ screenshot_counter = 1
 value = None
 # Добавьте словарь для хранения последних кадров с каждой камеры
 last_frames = {}
+s3 = boto3.client(
+    's3',
+    aws_access_key_id='YCAJED2HUj8DMX6N6ROlMjD4O',
+    aws_secret_access_key='YCMZKYsIcf9dQN7MC_Hoe9-8mQhZcxusZb4VeZu1',
+    endpoint_url='https://storage.yandexcloud.net'
+
+)
+bucket_name = 'meff1986'
 
 def stream_video(request):
     camera = int(request.GET.get('camera', 1))
@@ -57,7 +72,8 @@ def stream_video(request):
 
     return StreamingHttpResponse(generate_frames(), content_type='multipart/x-mixed-replace; boundary=frame')
 
-async def capture_frames(request):
+
+def capture_frames(request):
     frame_interval = 0.35
     max_time = 22.5
     start_time = time.time()
@@ -68,7 +84,7 @@ async def capture_frames(request):
         i += 1
 
         # Ожидаем получения нового кадра из каждого видеопотока
-        await asyncio.sleep(frame_interval)
+        time.sleep(frame_interval)
 
         # Получаем последний доступный кадр из каждого видеопотока
         frame1 = last_frames[4]
@@ -76,28 +92,39 @@ async def capture_frames(request):
         frame3 = last_frames[3]
         frame4 = last_frames[5]
 
-        # Сохраняем кадр в папке с именем `value`
-        cv2.imwrite(f'D:/digital/{value}/{value}_{position_value}_{i}_1.jpg', frame1)
-        cv2.imwrite(f'D:/digital/{value}/{value}_{position_value}_{i}_2.jpg', frame2)
-        cv2.imwrite(f'D:/digital/{value}/{value}_{position_value}_{i}_3.jpg', frame3)
-        cv2.imwrite(f'D:/digital/{value}/{value}_{position_value}_{i}_4.jpg', frame4)
+        # Создаем экземпляр модели Photo и ассоциируем его с моделью CarParts
+        car_part = CarPart.objects.get(article_number=value) if value else None
+
+        # Создаем и сохраняем фотографии
+        for frame_number, frame in enumerate([frame1, frame2, frame3, frame4], start=1):
+            filename = f'{value}_{position_value}_{i}_{frame_number}.jpg'
+            filepath = f'D:/digital/{value}/{filename}'
+
+            # Сохраняем кадр как изображение
+            cv2.imwrite(filepath, frame)
+
+            # Проверяем, существует ли уже объект Photo с таким image_url
+            existing_photo = Photo.objects.filter(image_url=filepath).first()
+            if not existing_photo:
+                # Если объекта Photo с таким image_url нет, то создаем новый объект
+                photo = Photo.objects.create(car_part=car_part, image_url=filepath)
 
     return JsonResponse({'success': True})
 
 
-
-
-
-
-@csrf_exempt
 def example_view(request):
     global value
     if request.method == 'POST':
         value = request.POST.get('value')
         print(value)
+        example_list = request.session.get('example_list', [])
+        example_list.append(value)
+        request.session['example_list'] = example_list
 
-        # value = ...  # Ваши действия с переменной value
-        return JsonResponse({'success': True})  # Возвращаем JSON с подтверждением
+        context = {'example_list': example_list}
+        return render(request, 'interface/control_page.html', context)
+
+
     return render(request, 'interface/digital_camera.html')
 
 @csrf_exempt
@@ -121,9 +148,8 @@ def save_screenshot(request):
     # Если получен кадр, сохраняем его как изображение
     if ret:
         # Create a folder if it doesn't exist
-        folder_name = f"{value}"
-        temp_dir = "D:/digital"  # Replace 'temp_dir' with the desired temporary directory path
-        folder_path = os.path.join(temp_dir, folder_name)
+        folder_name = f"{value}" # Replace 'temp_dir' with the desired temporary directory path
+        folder_path = os.path.join(folder_name)
         os.makedirs(folder_path, exist_ok=True)
 
         # Save the frame as an image file with a unique name, including the article number if available
@@ -134,9 +160,16 @@ def save_screenshot(request):
 
         filepath = os.path.join(folder_path, filename)
         cv2.imwrite(filepath, frame)
-
+        s3_path = f"{filename}"
+        s3.upload_file(filepath, bucket_name, s3_path)
         # Increment the screenshot counter
         screenshot_counter += 1
+
+        car_part = CarPart.objects.get(article_number=value) if value else None
+        existing_photo = Photo.objects.filter(image_url='https://storage.yandexcloud.net/meff1986/' + s3_path).first()
+        if not existing_photo:
+            # Если объекта Photo с таким image_url нет, то создаем новый объект
+            photo = Photo.objects.create(car_part=car_part, image_url='https://storage.yandexcloud.net/meff1986/' + s3_path)
 
         # If the 'OK' button is clicked in the modal dialog, create a new folder for the next screenshots
         if request.POST.get('button') == 'OK':
@@ -147,6 +180,8 @@ def save_screenshot(request):
         return HttpResponse('Screenshot saved successfully.')
     else:
         return HttpResponse('Failed to capture a frame from camera 1.')
+
+
 
 @csrf_exempt
 def send_files_to_server(request):
@@ -203,7 +238,10 @@ def digital_camera(request):
 def control_page(request):
     if request.user.groups.filter(name='Операторы').exists():
         return redirect('interface:digital_camera')
-    return render(request, 'interface/control_page.html')
+
+
+    context = {'example_list': request.session.get('example_list', [])}
+    return render(request, 'interface/control_page.html', context)
 
 
 
@@ -224,4 +262,7 @@ def save_car_part(request):
 
 
 
-
+def get_photos_by_article(request):
+    article_number = request.GET.get("article_number")
+    photos = Photo.objects.filter(car_part__article_number=article_number).values_list("image_url", flat=True)
+    return JsonResponse({"photos": list(photos)})

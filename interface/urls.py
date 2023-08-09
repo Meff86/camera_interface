@@ -14,4 +14,5 @@ urlpatterns = [
     path('send_files/', views.send_files_to_server, name='send_files'),
     path('control/', views.control_page, name='control_page'),
     path('save_car_part/', views.save_car_part, name='save_car_part'),
+    path('get_photos_by_article/', views.get_photos_by_article, name='get_photos_by_article'),
 ]
