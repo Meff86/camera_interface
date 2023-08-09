@@ -526,3 +526,50 @@ display: flex;
 justify-content: center;
 padding-top: 15px;
 }
+
+/* Roster */ 
+
+.body__roster {
+  background-color: #fff2cc;
+}
+
+.roster{
+  width: 100%;
+  min-height: 100vh;
+  display: grid;
+  font-size: 24px;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  grid-template-areas:
+  "C C C C C C " 
+  "B B B B B B"
+  "B B B B B B"
+  "B B B B B B"
+  "B B B B B B"
+  "B B B B B B"
+  "B B B B B B"
+  "B B B B B B"
+  "B B B B B B"
+  "B B B B B B"
+}
+
+.roster-wrapper {
+  grid-area: B;
+  align-self: stretch;
+}
+
+table {
+  font-size: inherit;
+}
+
+.roster__button {
+  font-weight: bold;
+  border: 1px solid #000000;
+  padding: 5px 50px;
+}
+
+.roster__table {
+  height: 600px;
+  overflow: auto;
+}
