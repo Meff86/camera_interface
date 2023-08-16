@@ -16,16 +16,17 @@
         <nav class="nav">
             <ul class="nav__list">
                 <li class="nav__item current-page"><a href="#">Экран оцифровки запчасти</a></li>
-                <li class="nav__item"><a href="#">Список запчастей</a></li>
+                <li class="nav__item"><a href="{% url 'interface:roster_page' %}">Список запчастей</a></li>
                 <li class="nav__item"><a href="{% url 'interface:control_page' %}">Экран проверки</a></li>
                 <li class="nav__item"><a class="logout-button" href="{% url 'user:logout' %}">Выход</a></li>
             </ul>
         </nav>
+
         <h1 class="visually-hidden">Экран оцифровки запчасти</h1>
               <section class="digital__process">
             {% if request.user.is_authenticated %}
                 <div class="digital__user process_wrapper">
-                <div class="digital__user-name">Пользователь: {{ request.user.first_name }} {{ request.user.last_name }}</div>
+                <div class="digital__user-name">Пользователь: {{ request.user.username }}</div>
                 <div class="digital__user-task"><a class="button digital__button digital__user-task-link" href="#">Задание!</a></div>
                 </div>
                 {% else %}
@@ -37,11 +38,11 @@
           <div id="content1">
             <form class="digital__process-form-photo current-point" action="" method="post">
                 {% csrf_token %}
-              <fieldset class="digital__process-fieldset-photo">
-                 <div class="process_wrapper">
-                  <label class="digital__process-input-label-article" for="article">Артикул</label>
-                  <input type="text" name="current_article_number" id="current_article_number" value="">
-                  <input class="digital__checkbox checkbox-article" type="checkbox" name="done" id="checkbox-article">
+             <fieldset class="digital__process-fieldset-photo">
+                <div class="process_wrapper">
+                    <label class="digital__process-input-label-article" for="article">Артикул</label>
+                    <input type="text" name="current_article_number" id="current_article_number" value="">
+                    <input class="digital__checkbox checkbox-article" type="checkbox" name="done" id="checkbox-article">
                 </div>
                 <div class="process_wrapper">
                   <label class="digital__process-label-photo" for="photo">
@@ -63,6 +64,13 @@
                 </div>
               </fieldset>
             </form>
+         <div id="errorModal" class="modal-error">
+             <div class="modal-content-error">
+                 <p id="errorMessage"></p>
+                 <button class="modal-ok-button-error" name="ok_button" onclick="closeModal()">OK</button>
+             </div>
+         </div>
+
           </div>
           <div id="content2">
             <form class="digital__process-form-photo-front" action="#" method="post">
@@ -152,7 +160,7 @@
                             <a class="digital_video-full-1" href="#" onclick="openFullscreen('video1');"><img src="{% static 'interface/img/svg/full_screen.svg' %}" width="40" height="40"></a>
                           </div>
                           <div class="digital_video-2">
-                            <img src="{% url 'interface:stream_video' %}?camera=1" id="video2" width="320" height="240">
+                            <img src="{% url 'interface:stream_video' %}?camera=6" id="video2" width="320" height="240">
                             <a class="digital_video-full-2" href="#" onclick="openFullscreen('video2');"><img src="{% static 'interface/img/svg/full_screen.svg' %}" width="40" height="40"></a>
                           </div>
                           <div class="digital_video-3">
@@ -187,24 +195,29 @@
 </html>
 
 <script>
-    // Функция для асинхронной передачи значения на сервер
     function updateValue(value) {
-        $.ajax({
-            type: "POST",
-            url: "{% url 'interface:example_view' %}", // Замените 'example_view' на имя вашего view
-            data: {
-                'value': value,
-                'csrfmiddlewaretoken': '{{ csrf_token }}' // Добавление CSRF токена для защиты от CSRF атак
-            },
-            success: function(response) {
-                // Обновление элемента на странице с результатом
+    $.ajax({
+        type: "POST",
+        url: "{% url 'interface:example_view' %}",
+        data: {
+            'value': value,
+            'csrfmiddlewaretoken': '{{ csrf_token }}'
+        },
+        success: function(response) {
+            if (response.error_message) {
+                openModal(response.error_message);  // Открываем модальное окно с сообщением об ошибке
+            } else {
                 $("#resultValue").text(response.result);
-            },
-            error: function(error) {
-                console.log("Ошибка при передаче значения: " + error);
             }
-        });
-    }
+        },
+        error: function(error) {
+            console.log("Ошибка при передаче значения: " + error);
+        }
+    });
+}
+
+
+
 
     function showModal(message, checkboxId) {
     var modal = document.createElement("div");
@@ -238,6 +251,23 @@
       modal.parentNode.removeChild(modal);
     });
   }
+
+
+function openModal(errorMessage) {
+    var modal = document.getElementById("errorModal");
+    var message = document.getElementById("errorMessage");
+    message.innerText = errorMessage;
+    modal.classList.add("modal-open-error");
+}
+
+    function closeModal() {
+        var modal = document.getElementById("errorModal");
+        modal.classList.remove("modal-open-error"); // Удаляем класс для скрытия модального окна
+    }
+
+
+
+
 
     function sendFilesToServer() {
     // Асинхронный POST-запрос к серверу
@@ -299,7 +329,47 @@ function getCookie(name) {
   }
   return cookieValue;
 }
+function openFullscreen(videoId) {
+  var elem = document.getElementById(videoId);
+  if (elem.requestFullscreen) {
+    elem.requestFullscreen().then(function() {
+      elem.width = window.screen.width;
+      elem.height = window.screen.height;
+    });
+  } else if (elem.mozRequestFullScreen) { // Firefox
+    elem.mozRequestFullScreen().then(function() {
+      elem.width = window.screen.width;
+      elem.height = window.screen.height;
+    });
+  } else if (elem.webkitRequestFullscreen) { // Chrome, Safari и Opera
+    elem.webkitRequestFullscreen().then(function() {
+      elem.width = window.screen.width;
+      elem.height = window.screen.height;
+    });
+  } else if (elem.msRequestFullscreen) { // IE/Edge
+    elem.msRequestFullscreen().then(function() {
+      elem.width = window.screen.width;
+      elem.height = window.screen.height;
+    });
+  }
+}
 
+document.addEventListener("fullscreenchange", function() {
+  var elem = document.fullscreenElement;
+  if (!elem) {
+    // Выход из полноэкранного режима, установите исходные значения размеров
+    var videoElements = document.querySelectorAll(".digital_video-wrapper img");
+    videoElements.forEach(function(video) {
+      video.width = 320;
+      video.height = 240;
+    });
+    var fullscreenIcons = document.querySelectorAll(".digital_video-wrapper a");
+    fullscreenIcons.forEach(function(icon) {
+      icon.firstChild.width = 40;
+      icon.firstChild.height = 40;
+    });
+  }
+});
 
 
 function fillProgressBar(progressBar, checkbox) {
@@ -443,5 +513,6 @@ function setupEventHandlers() {
 $(document).ready(function() {
   setupEventHandlers();
 });
+
 </script>
 

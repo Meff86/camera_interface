@@ -40,47 +40,7 @@ function getCsrfToken() {
 
 
 
-function openFullscreen(videoId) {
-  var elem = document.getElementById(videoId);
-  if (elem.requestFullscreen) {
-    elem.requestFullscreen().then(function() {
-      elem.width = window.screen.width;
-      elem.height = window.screen.height;
-    });
-  } else if (elem.mozRequestFullScreen) { // Firefox
-    elem.mozRequestFullScreen().then(function() {
-      elem.width = window.screen.width;
-      elem.height = window.screen.height;
-    });
-  } else if (elem.webkitRequestFullscreen) { // Chrome, Safari и Opera
-    elem.webkitRequestFullscreen().then(function() {
-      elem.width = window.screen.width;
-      elem.height = window.screen.height;
-    });
-  } else if (elem.msRequestFullscreen) { // IE/Edge
-    elem.msRequestFullscreen().then(function() {
-      elem.width = window.screen.width;
-      elem.height = window.screen.height;
-    });
-  }
-}
 
-document.addEventListener("fullscreenchange", function() {
-  var elem = document.fullscreenElement;
-  if (!elem) {
-    // Выход из полноэкранного режима, установите исходные значения размеров
-    var videoElements = document.querySelectorAll(".digital_video-wrapper img");
-    videoElements.forEach(function(video) {
-      video.width = 320;
-      video.height = 240;
-    });
-    var fullscreenIcons = document.querySelectorAll(".digital_video-wrapper a");
-    fullscreenIcons.forEach(function(icon) {
-      icon.firstChild.width = 40;
-      icon.firstChild.height = 40;
-    });
-  }
-});
 
 
 

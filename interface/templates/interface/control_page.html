@@ -16,7 +16,7 @@
         <nav class="nav">
             <ul class="nav__list">
                 <li class="nav__item "><a href="{% url 'interface:digital_camera' %}">Экран оцифровки запчасти</a></li>
-                <li class="nav__item"><a href="#">Список запчастей</a></li>
+                <li class="nav__item"><a href="{% url 'interface:roster_page' %}">Список запчастей</a></li>
                 <li class="nav__item current-page"><a href="{% url 'interface:control_page' %}">Экран проверки</a></li>
                 <li class="nav__item"><a href="{% url 'user:logout' %}">Выход</a></li>
             </ul>
@@ -24,19 +24,21 @@
         <h1 class="visually-hidden">Экран оцифровки запчасти</h1>
         <section class="control__process">
             <div class="control__user process_wrapper">
-                <div class="control__user-name">Пользователь: {{ request.user.first_name }} {{ request.user.last_name }}</div>
+                <div class="control__user-name">Пользователь: {{ request.user.username }}</div>
                 <div class="control__user-task"><a class="button control__button control__user-task-link button-show" href="#">Задание оператору</a></div>
             </div>
             <form class="control_form-article" action="#" method="post">
                 {% csrf_token %}
                 <fieldset class="control__fieldset-textarea" style="height: 200px; overflow: auto;">
                  <div class="">
-                    <p>Дата оцифровки:<input type="date"></p>
-                     <ol>
-                        {% for value in example_list %}
-                        <li class="article-item" data-article="{{ value }}">{{ value }}</li>
+                    <ol>
+                        {% for article in matching_articles %}
+                        <li class="article-item {% if forloop.first %}selected{% endif %}" data-article="{{ article.article_number }}">
+                            {{ article.article_number }} - {{ article.added_time|date:"d-m-Y H:i" }}
+                        </li>
                         {% endfor %}
-                     </ol>
+                    </ol>
+                </div>
 
                 </div>
                 </fieldset>
@@ -94,20 +96,20 @@
                 <p class="control__camera-heading">Экран камеры</p>
                 <div class="control_video-wrapper">
                     <div class="control_video-1" id="video-1">
-                        <img src="{% url 'interface:stream_video' %}" width="320" height="240">
-                        <a class="control_video-full-1" href="#"><img src="{% static 'interface/img/svg/full_screen.svg' %}" width="40" height="40"></a>
+                            <img class="video-image" id="pic-1" src="{% url 'interface:stream_video' %}" width="320" height="240">
+                            <a class="control_video-full-1" href="#" onclick="openFullscreen('video-1', 'pic-1');"><img src="{% static 'interface/img/svg/full_screen.svg' %}" width="40" height="40"></a>
                     </div>
-                    <div class="control_video-2">
-                        <img  src="{% url 'interface:stream_video' %}" width="320" height="240">
-                        <a class="control_video-full-2" href="#"><img  src="{% static 'interface/img/svg/full_screen.svg' %}" width="40" height="40"></a>
+                    <div class="control_video-2" id="video-2">
+                        <img class="video-image" id="pic-2" src="{% url 'interface:stream_video' %}" width="320" height="240">
+                        <a class="control_video-full-2" href="#" onclick="openFullscreen('video-2', 'pic-2');"><img  src="{% static 'interface/img/svg/full_screen.svg' %}" width="40" height="40"></a>
                       </div>
-                      <div class="control_video-3">
-                        <img  src="{% url 'interface:stream_video' %}" width="320" height="240">
-                        <a class="control_video-full-3" href="#"><img  src="{% static 'interface/img/svg/full_screen.svg' %}" width="40" height="40"></a>
+                      <div class="control_video-3" id='video-3'>
+                        <img class="video-image" id="pic-3" src="{% url 'interface:stream_video' %}" width="320" height="240">
+                        <a class="control_video-full-3" href="#" onclick="openFullscreen('video-3', 'pic-3');"><img  src="{% static 'interface/img/svg/full_screen.svg' %}" width="40" height="40"></a>
                       </div>
-                      <div class="control_video-4">
-                        <img  src="{% url 'interface:stream_video' %}" width="320" height="240">
-                        <a class="control_video-full-4" href="#"><img  src="{% static 'interface/img/svg/full_screen.svg' %}" width="40" height="40"></a>
+                      <div class="control_video-4" id='video-4'>
+                        <img class="video-image" id="pic-4" src="{% url 'interface:stream_video' %}" width="320" height="240">
+                        <a class="control_video-full-4" href="#" onclick="openFullscreen('video-4', 'pic-4');"><img  src="{% static 'interface/img/svg/full_screen.svg' %}" width="40" height="40"></a>
                       </div>
                     </div>
             </form>
@@ -188,15 +190,15 @@
       const formData = new FormData(form);
       const xhr = new XMLHttpRequest();
 
-      xhr.open('POST', '{% url "interface:save_car_part" %}', true)
+      xhr.open('POST', '{% url "interface:save_car_part" %}', true);
       xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
 
       xhr.onreadystatechange = function() {
         if (xhr.readyState === XMLHttpRequest.DONE) {
           if (xhr.status === 200) {
             const response = JSON.parse(xhr.responseText);
-            console.log(response.message);  // Можно добавить обработку успешного сообщения
-          // Закрытие модального окна и очистка формы
+            console.log(response.message);  // Можно добавить обработку успешного сообщени
+            // Закрытие модального окна и очистка формы
             modalControl.classList.remove('modal-open');
             form.reset();
           } else {
@@ -209,30 +211,33 @@
     });
 
 
-$(document).ready(function() {
-  $("ol li").click(function() {
-    var article = $(this).text();
-    $.ajax({
-      url: "{% url 'interface:get_photos_by_article' %}",
-      type: "GET",
-      data: { article_number: article },
-      dataType: "json",
-      success: function(response) {
-        // Обновляем первый блок с фотографией
-        updatePhotoBlock("video-1", response.photos[0]);
-      },
-      error: function(xhr, errmsg, err) {
-        console.log(xhr.status + ": " + xhr.responseText);
-      }
-    });
-  });
-});
 
-function updatePhotoBlock(blockId, photoUrl) {
-  $("#" + blockId + " img").attr("src", photoUrl);
-}$(document).ready(function() {
+$(document).ready(function() {
+  const articleItems = $(".article-item");
+  let currentIndex = 0;
+
+  function updateCurrentArticle() {
+    articleItems.removeClass("selected");
+    articleItems.eq(currentIndex).addClass("selected");
+  }
+
+  $(".control__process-back").click(function(event) {
+    event.preventDefault();
+    if (currentIndex > 0) {
+      currentIndex--;
+      updateCurrentArticle();
+    }
+  });
+
+  $(".control__process-next").click(function(event) {
+    event.preventDefault();
+    if (currentIndex < articleItems.length - 1) {
+      currentIndex++;
+      updateCurrentArticle();
+    }
+  });
   $("ol li").click(function() {
-    var article = $(this).text();
+    var article = $(this).text().split(' - ')[0].trim();
     $.ajax({
       url: "{% url 'interface:get_photos_by_article' %}",
       type: "GET",
@@ -240,7 +245,7 @@ function updatePhotoBlock(blockId, photoUrl) {
       dataType: "json",
       success: function(response) {
         // Обновляем блоки с фотографиями
-        loadPhotosForArticle(response.photos);
+        loadPhotosForArticle(response.photos, article);
       },
       error: function(xhr, errmsg, err) {
         console.log(xhr.status + ": " + xhr.responseText);
@@ -249,16 +254,145 @@ function updatePhotoBlock(blockId, photoUrl) {
   });
 });
 
-function loadPhotosForArticle(photos) {
-  updatePhotoBlock("video-1", photos[0]);
+function loadPhotosForArticle(photos, article) {
+  loadRandomPhotoByLetter(photos, "article", "video-1");
+  loadRandomPhotoByLetter(photos, "F", "video-2");
+  loadRandomPhotoByLetter(photos, "R", "video-3");
+  loadRandomPhotoByLetter(photos, "O", "video-4");
 }
 
-function updatePhotoBlock(blockId, photoUrl) {
-  // Здесь photoUrl представляет ссылку на изображение в локальном хранилище
-  $("#" + blockId + " img").attr("src", photoUrl);
+function loadRandomPhotoByLetter(photos, letter, blockId) {
+  let suitablePhotos = [];
+  for (let i = 0; i < photos.length; i++) {
+    if (photos[i].includes(letter)) {
+      suitablePhotos.push(photos[i]);
+    }
+  }
+
+  if (suitablePhotos.length > 0) {
+    const randomIndex = Math.floor(Math.random() * suitablePhotos.length);
+    const randomPhotoUrl = suitablePhotos[randomIndex];
+
+    // Установка атрибута src для изображения
+    $("#" + blockId + " .video-image").attr("src", randomPhotoUrl);
+  } else {
+    console.log(`No suitable photo found for ${letter}`);
+  }
+}
+$(document).ready(function() {
+    $(".button.control__button-disagree").click(function(e) {
+        e.preventDefault(); // Предотвращает стандартное действие кнопки (отправка формы)
+
+        var selectedArticle = $(".article-item.selected").data("article");
+        var csrfToken = getCookie('csrftoken'); // Получаем CSRF-токен
+
+        $.ajax({
+            type: 'POST',
+            url: '{% url "interface:delete_matching_article" %}',  // Замените на правильный URL
+            data: { article: selectedArticle },
+            beforeSend: function(xhr, settings) {
+                xhr.setRequestHeader("X-CSRFToken", csrfToken); // Добавляем CSRF-токен в заголовок
+            },
+            success: function(response) {
+                if (response.success) {
+                    // Успешно удалено из модели MatchingArticle
+                    // Теперь обновите таблицу или другие элементы на странице по необходимости
+                }
+            },
+            error: function() {
+                // Обработка ошибок
+            }
+        });
+    });
+});
+
+// Функция для получения CSRF-токена
+function getCookie(name) {
+    var cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        var cookies = document.cookie.split(';');
+        for (var i = 0; i < cookies.length; i++) {
+            var cookie = jQuery.trim(cookies[i]);
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+// Функция для получения CSRF-токена
+function getCookie(name) {
+    var cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        var cookies = document.cookie.split(';');
+        for (var i = 0; i < cookies.length; i++) {
+            var cookie = jQuery.trim(cookies[i]);
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+function openFullscreen(videoId, imgId) {
+    var elem = document.getElementById(videoId);
+    var img = document.getElementById(imgId);
+
+    if (elem.requestFullscreen) {
+        elem.requestFullscreen().then(function () {
+            elem.style.width = '100%';
+            elem.style.height = '100%';
+            img.style.width = '100%';
+            img.style.height = '100%';
+        });
+    } else if (elem.mozRequestFullScreen) { // Firefox
+        elem.mozRequestFullScreen().then(function () {
+            elem.style.width = '100%';
+            elem.style.height = '100%';
+            img.style.width = '100%';
+            img.style.height = '100%';
+        });
+    } else if (elem.webkitRequestFullscreen) { // Chrome, Safari и Opera
+        elem.webkitRequestFullscreen().then(function () {
+            elem.style.width = '100%';
+            elem.style.height = '100%';
+            img.style.width = '100%';
+            img.style.height = '100%';
+        });
+    } else if (elem.msRequestFullscreen) { // IE/Edge
+        elem.msRequestFullscreen().then(function () {
+            elem.style.width = '100%';
+            elem.style.height = '100%';
+            img.style.width = '100%';
+            img.style.height = '100%';
+        });
+    }
 }
 
+document.addEventListener("fullscreenchange", function () {
+    var elem = document.fullscreenElement;
+    if (!elem) {
+        var videoFrames = document.querySelectorAll(".video-frame");
+        videoFrames.forEach(function (frame) {
+            frame.style.width = '320px';
+            frame.style.height = '240px';
+        });
 
+        var images = document.querySelectorAll(".video-image");
+        images.forEach(function (img) {
+            img.style.width = '320px';
+            img.style.height = '240px';
+        });
+
+        var fullscreenIcons = document.querySelectorAll(".control_video-wrapper a");
+        fullscreenIcons.forEach(function (icon) {
+            icon.firstChild.width = 40;
+            icon.firstChild.height = 40;
+        });
+    }
+});
 </script>
 </body>
 </html>

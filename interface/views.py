@@ -6,13 +6,18 @@ from django.shortcuts import render, redirect
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
 import paramiko
 import os
-from .models import CarPart, Photo
+from .models import CarPart, Photo, MatchingArticle
 from queue import Queue
 import numpy as np
 from .forms import CarPartForm
 from django.contrib.auth.decorators import user_passes_test
 import boto3
 from botocore.exceptions import NoCredentialsError
+import shutil
+from django.utils import timezone
+from datetime import datetime
+import json
+
 AWS_S3_ACCESS_KEY_ID = 'YCAJED2HUj8DMX6N6ROlMjD4O'
 AWS_S3_SECRET_ACCESS_KEY = 'YCMZKYsIcf9dQN7MC_Hoe9-8mQhZcxusZb4VeZu1'
 AWS_STORAGE_BUCKET_NAME = 'meff1986'
@@ -20,7 +25,7 @@ AWS_S3_ENDPOINT_URL = 'https://storage.yandexcloud.net'
 
 
 # Глобальные переменные
-camera_numbers = [1, 2, 3, 4]
+camera_numbers = [1, 2, 3, 4, 5]
 folder_number = 1
 screenshot_counter = 1
 value = None
@@ -63,12 +68,7 @@ def stream_video(request):
                 yield (b'--frame\r\n'
                        b'Content-Type: image/jpeg\r\n\r\n' + jpeg.tobytes() + b'\r\n\r\n')
         except GeneratorExit:
-            # При выходе из генератора освобождаем ресурсы камеры
-            cap.release()
-        except Exception as e:
-            # Обрабатываем другие исключения, если необходимо
-            print("Error:", e)
-            cap.release()
+            pass
 
     return StreamingHttpResponse(generate_frames(), content_type='multipart/x-mixed-replace; boundary=frame')
 
@@ -80,6 +80,10 @@ def capture_frames(request):
     i = 0
 
     position_value = request.POST.get('front_value')
+    folder_name = f"{value}"  # Replace 'temp_dir' with the desired temporary directory path
+    folder_path = os.path.join(folder_name)
+    os.makedirs(folder_path, exist_ok=True)
+
     while (time.time() - start_time) < max_time:
         i += 1
 
@@ -88,27 +92,34 @@ def capture_frames(request):
 
         # Получаем последний доступный кадр из каждого видеопотока
         frame1 = last_frames[4]
-        frame2 = last_frames[1]
+        frame2 = last_frames[6]
         frame3 = last_frames[3]
         frame4 = last_frames[5]
 
         # Создаем экземпляр модели Photo и ассоциируем его с моделью CarParts
         car_part = CarPart.objects.get(article_number=value) if value else None
 
+
         # Создаем и сохраняем фотографии
         for frame_number, frame in enumerate([frame1, frame2, frame3, frame4], start=1):
             filename = f'{value}_{position_value}_{i}_{frame_number}.jpg'
-            filepath = f'D:/digital/{value}/{filename}'
+            filepath = f'{value}/{filename}'
+
 
             # Сохраняем кадр как изображение
             cv2.imwrite(filepath, frame)
+            s3_path = f"{filepath}"
+            s3.upload_file(filepath, bucket_name, s3_path)
 
             # Проверяем, существует ли уже объект Photo с таким image_url
-            existing_photo = Photo.objects.filter(image_url=filepath).first()
+            existing_photo = Photo.objects.filter(image_url='https://storage.yandexcloud.net/meff1986/' + s3_path).first()
             if not existing_photo:
                 # Если объекта Photo с таким image_url нет, то создаем новый объект
-                photo = Photo.objects.create(car_part=car_part, image_url=filepath)
+                photo = Photo.objects.create(car_part=car_part, image_url='https://storage.yandexcloud.net/meff1986/' + s3_path)
 
+            # Удаляем локальный файл после успешной загрузки на S3
+
+    shutil.rmtree(folder_path)
     return JsonResponse({'success': True})
 
 
@@ -116,69 +127,85 @@ def example_view(request):
     global value
     if request.method == 'POST':
         value = request.POST.get('value')
-        print(value)
-        example_list = request.session.get('example_list', [])
-        example_list.append(value)
-        request.session['example_list'] = example_list
 
-        context = {'example_list': example_list}
-        return render(request, 'interface/control_page.html', context)
+        if value:
+            matching_car_part = CarPart.objects.filter(article_number=value).first()
 
+            if matching_car_part:
+                matching_article, created = MatchingArticle.objects.get_or_create(
+                    article_number=matching_car_part.article_number)
+            else:
+                error_message = 'Вы ввели неправильный артикул'
+                print(error_message)
+                return JsonResponse({'error_message': error_message})  # Возвращаем сообщение об ошибке в AJAX-ответ
+
+        matching_articles = MatchingArticle.objects.all()
+        return render(request, 'interface/control_page.html', {'matching_articles': matching_articles})
 
     return render(request, 'interface/digital_camera.html')
+
 
 @csrf_exempt
 def save_screenshot(request):
     global folder_number, screenshot_counter, value
 
-    # Открываем видеопоток с первой камеры
+    # Открываем видеопоток с первой камерыp
     camera = 1
     cap = cv2.VideoCapture(camera)
 
     # Установка разрешения видео
+    cap.set(cv2.CAP_PROP_AUTOFOCUS, 1)
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
 
-    # Читаем кадр из видеопотока
-    ret, frame = cap.read()
 
-    # Освобождаем ресурсы камеры
-    cap.release()
+    cap.set(cv2.CAP_PROP_AUTOFOCUS, 1)
+    ret, frame = cap.read()
+    if not ret:
+        cap.release()  # Освобождаем ресурсы камеры
+        return HttpResponse('Failed to capture a frame from camera.')
 
     # Если получен кадр, сохраняем его как изображение
     if ret:
-        # Create a folder if it doesn't exist
-        folder_name = f"{value}" # Replace 'temp_dir' with the desired temporary directory path
-        folder_path = os.path.join(folder_name)
-        os.makedirs(folder_path, exist_ok=True)
+        try:
+            # Create a folder if it doesn't exist
+            folder_name = f"{value}"  # Replace 'temp_dir' with the desired temporary directory path
+            folder_path = os.path.join(folder_name)
+            os.makedirs(folder_path, exist_ok=True)
 
-        # Save the frame as an image file with a unique name, including the article number if available
-        if value:
-            filename = f"article_{screenshot_counter}_{value}.jpg"
-        else:
-            filename = f"article_{screenshot_counter}.jpg"
+            # Save the frame as an image file with a unique name, including the article number if available
+            if value:
+                filename = f"article_{screenshot_counter}_{value}.jpg"
+            else:
+                filename = f"article_{screenshot_counter}.jpg"
 
-        filepath = os.path.join(folder_path, filename)
-        cv2.imwrite(filepath, frame)
-        s3_path = f"{filename}"
-        s3.upload_file(filepath, bucket_name, s3_path)
-        # Increment the screenshot counter
-        screenshot_counter += 1
+            filepath = os.path.join(folder_path, filename)
+            cv2.imwrite(filepath, frame)
+            s3_path = f"{folder_name}/{filename}"
+            s3.upload_file(filepath, bucket_name, s3_path)
+            # Increment the screenshot counter
+            screenshot_counter += 1
 
-        car_part = CarPart.objects.get(article_number=value) if value else None
-        existing_photo = Photo.objects.filter(image_url='https://storage.yandexcloud.net/meff1986/' + s3_path).first()
-        if not existing_photo:
-            # Если объекта Photo с таким image_url нет, то создаем новый объект
-            photo = Photo.objects.create(car_part=car_part, image_url='https://storage.yandexcloud.net/meff1986/' + s3_path)
+            car_part = CarPart.objects.get(article_number=value) if value else None
+            existing_photo = Photo.objects.filter(image_url='https://storage.yandexcloud.net/meff1986/' + s3_path).first()
+            if not existing_photo:
+                # Если объекта Photo с таким image_url нет, то создаем новый объект
+                photo = Photo.objects.create(car_part=car_part,
+                                             image_url='https://storage.yandexcloud.net/meff1986/' + s3_path)
 
-        # If the 'OK' button is clicked in the modal dialog, create a new folder for the next screenshots
-        if request.POST.get('button') == 'OK':
-            folder_number += 1
-            screenshot_counter = 1
+            # If the 'OK' button is clicked in the modal dialog, create a new folder for the next screenshots
+            if request.POST.get('button') == 'OK':
+                folder_number += 1
+                screenshot_counter = 1
+
+        finally:
+            cap.release()  # Освобождаем ресурсы камеры
+            shutil.rmtree(folder_path)  # Удаляем временную папку
 
         # Return a response indicating success
         return HttpResponse('Screenshot saved successfully.')
     else:
+        cap.release()  # Освобождаем ресурсы камеры
         return HttpResponse('Failed to capture a frame from camera 1.')
 
 
@@ -234,14 +261,7 @@ def send_files_to_server(request):
 def digital_camera(request):
     return render(request, 'interface/digital_camera.html')
 
-@csrf_protect
-def control_page(request):
-    if request.user.groups.filter(name='Операторы').exists():
-        return redirect('interface:digital_camera')
 
-
-    context = {'example_list': request.session.get('example_list', [])}
-    return render(request, 'interface/control_page.html', context)
 
 
 
@@ -254,15 +274,61 @@ def save_car_part(request):
         # Создание объекта модели и сохранение в базу данных
         new_entry = CarPart(article_number=article_number, name=name, place=place)
         new_entry.save()
-
-        return JsonResponse({'message': 'Данные успешно сохранены.'})
+        return JsonResponse({'message': 'Данные успешно сохранены'})
     else:
         return JsonResponse({'message': 'Неверный метод запроса.'}, status=400)
 
+@csrf_protect
+def control_page(request):
+    if request.user.groups.filter(name='Операторы').exists():
+        return redirect('interface:digital_camera')
 
-
+    matching_articles = MatchingArticle.objects.all()  # Получить все объекты MatchingArticle
+    return render(request, 'interface/control_page.html', {'matching_articles': matching_articles})
 
 def get_photos_by_article(request):
     article_number = request.GET.get("article_number")
     photos = Photo.objects.filter(car_part__article_number=article_number).values_list("image_url", flat=True)
     return JsonResponse({"photos": list(photos)})
+
+
+
+def get_car_parts_json(selected_date):
+    print("AJAX request received with selected date:", selected_date)
+    if selected_date:
+        selected_date = datetime.strptime(selected_date, '%Y-%m-%d').date()
+        car_parts = CarPart.objects.filter(added_time__date=selected_date)
+    else:
+        car_parts = CarPart.objects.all()
+
+    car_parts_data = [
+        {'article_number': part.article_number, 'name': part.name, 'place': part.place, 'added_time': part.added_time}
+        for part in car_parts
+    ]
+
+    return JsonResponse({'car_parts': car_parts_data})
+
+
+def roster_page(request):
+    selected_date = request.GET.get('date')
+    matching_articles = MatchingArticle.objects.values_list('article_number', flat=True)
+
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        return get_car_parts_json(selected_date)
+    else:
+        car_parts = CarPart.objects.all()
+
+
+        context = {'car_parts': car_parts, 'matching_articles': matching_articles}
+        return render(request, 'interface/roster_page.html', context)
+
+
+def delete_matching_article_view(request):
+    if request.method == 'POST':
+        selected_article = request.POST.get('article')
+        try:
+            matching_article = MatchingArticle.objects.get(article_number=selected_article)
+            matching_article.delete()
+            return JsonResponse({'success': True})
+        except MatchingArticle.DoesNotExist:
+            return JsonResponse({'success': False})

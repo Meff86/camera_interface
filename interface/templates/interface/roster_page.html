@@ -1,0 +1,187 @@
+{% load static %}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Список запчастей</title>
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <link rel="stylesheet" type="text/css" href="{% static 'interface/css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'interface/css/normalize.css' %}">
+    <script src="{% static 'interface/js/script.js' %}"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<style>
+@media print {
+    .hidden-row {
+        display: none !important;
+    }
+}
+</style>
+</head>
+
+<body class="body__roster">
+    {% block content %}
+    <main class="site-main roster">
+        <nav class="nav">
+            <ul class="nav__list">
+                <li class="nav__item "><a href="{% url 'interface:digital_camera' %}">Экран оцифровки запчасти</a></li>
+                <li class="nav__item current-page"><a href="#">Список запчастей</a></li>
+                <li class="nav__item"><a href="{% url 'interface:control_page' %}">Экран проверки</a></li>
+                <li class="nav__item"><a href="{% url 'user:logout' %}">Выход</a></li>
+            </ul>
+        </nav>
+        <div class="roster-wrapper">
+        <h1 class="visually-hidden">Экран оцифровки запчасти</h1>
+        <section class="roster__process">
+            <div class="roster__user process_wrapper">
+                <div class="roster__user-name">Пользователь: {{ request.user.username }}</div>
+                <div class="roster__user-task"><a class="button roster__button" href="#">Задание оператору</a></div>
+            </div>
+            <div class="process_wrapper">
+                <button class="button roster__button">Список запчастей для оцифровки</button>
+                <button class="button roster__button" id="print-button">Распечатать</button>
+            </div>
+        </section>
+        <section class="roster__table">
+          <table class="table" width="100%" border="1" cellspacing="0" cellpadding="4">
+            <thead>
+                <tr class="table__row">
+                    <th class="table__header">№</th>
+                    <th class="table__header">1. Артикул</th>
+                    <th class="table__header">2. Название</th>
+                    <th class="table__header">3. Место</th>
+                    <th class="table__header">4. Дата добавления</th>
+                </tr>
+            </thead>
+            <tbody id="table-body">
+                {% for car_part in car_parts %}
+                <tr class="table__row {% if car_part.article_number in matching_articles %}hidden-row{% endif %}">
+                    <td class="table__data">{{ forloop.counter }}</td>
+                    <td class="table__data" data-article="{{ car_part.article_number }}">{{ car_part.article_number }}</td>
+                    <td class="table__data">{{ car_part.name }}</td>
+                    <td class="table__data">{{ car_part.place }}</td>
+                    <td class="table__data">{{ car_part.added_time}}</td>
+                </tr>
+                {% endfor %}
+          </tbody>
+        </table>
+        </section>
+        </div>
+    </main>
+    {% endblock %}
+ <script>
+$(document).ready(function() {
+  const selectedDateInput = document.getElementById('selected-date');
+  const tableBody = document.getElementById('table-body'); // Получаем tbody по id
+
+  selectedDateInput.addEventListener('change', function() {
+    const selectedDate = selectedDateInput.value;
+    console.log('Выбранная дата:', selectedDate);
+
+
+    $.ajax({
+      url: `/interface/roster_page/?date=${selectedDate}`,
+      type: 'GET',
+      dataType: 'json',
+      success: function(response) {
+        updateTable(response.car_parts);
+      },
+      error: function(xhr, errmsg, err) {
+        console.log(xhr.status + ': ' + xhr.responseText);
+      }
+    });
+  });
+
+  function updateTable(carParts) {
+    tableBody.innerHTML = ''; // Очищаем tbody
+
+    carParts.forEach(function(carPart, index) {
+      const row = `
+        <tr class="table__row">
+          <td class="table__data">${index + 1}</td>
+          <td class="table__data" data-article="${carPart.article_number}">${carPart.article_number}</td>
+          <td class="table__data">${carPart.name}</td>
+          <td class="table__data">${carPart.place}</td>
+          <td class="table__data">${carPart.added_time}</td>
+        </tr>
+      `;
+      tableBody.insertAdjacentHTML('beforeend', row);
+    });
+  }
+
+  const matchedArticles = "{{ matching_articles|join:',' }}";  // Получаем значения из контекста
+  console.log('Значение matchedArticles:', matchedArticles);
+$(document).ready(function() {
+  const matchedArticles = "{{ matched_articles }}";  // Получаем значение из контекста
+
+  if (matchedArticles) {
+    const table = document.querySelector(".table");  // Выбираем таблицу
+    const rows = table.querySelectorAll(".table__row");  // Выбираем строки таблицы
+
+    // Проходимся по всем строкам и скрываем те, где артикул совпал
+    rows.forEach(row => {
+      const articleCell = row.querySelector(".table__data[data-article]");
+      if (articleCell && matchedArticles.includes(articleCell.textContent)) {
+        row.style.display = "none";
+      }
+    });
+  }
+});
+
+$(document).ready(function() {
+    var removeHiddenRow = localStorage.getItem('removeHiddenRow');
+    if (removeHiddenRow) {
+        $(".table__row[data-article='" + removeHiddenRow + "']").removeClass("hidden-row");
+        localStorage.removeItem('removeHiddenRow');
+    }
+});
+document.addEventListener('DOMContentLoaded', function () {
+    // Получаем ссылку на кнопку "Распечатать"
+    var printButton = document.getElementById('print-button');
+
+    // Добавляем обработчик события клика на кнопку
+    printButton.addEventListener('click', function () {
+        // Получаем ссылку на таблицу
+        var table = document.querySelector('.roster__table table');
+
+        // Открываем новое окно для печати
+        var printWindow = window.open('', '_blank');
+
+        // Вставляем HTML содержимое таблицы в новое окно
+        printWindow.document.write('<html><head><title>Печать</title></head><body>');
+        printWindow.document.write(table.outerHTML);
+        printWindow.document.write('</body></html>');
+
+        // Печатаем содержимое нового окна
+        printWindow.print();
+
+        // Закрываем новое окно после печати
+        printWindow.close();
+    });
+});
+
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var printButton = document.getElementById('print-button');
+    printButton.addEventListener('click', function () {
+        var table = document.querySelector('.roster__table table');
+
+        var cloneTable = table.cloneNode(true); // Создаем копию таблицы
+
+        var hiddenRows = cloneTable.querySelectorAll('.hidden-row');
+        hiddenRows.forEach(function(row) {
+            row.parentNode.removeChild(row); // Удаляем скрытые строки из копии таблицы
+        });
+
+        var printWindow = window.open('', '_blank');
+
+        printWindow.document.write('<html><head><title>Печать</title></head><body>');
+        printWindow.document.write(cloneTable.outerHTML); // Печатаем копию таблицы
+        printWindow.document.write('</body></html>');
+
+        printWindow.print();
+        printWindow.close();
+    });
+});
+</script>
+</body>
+
