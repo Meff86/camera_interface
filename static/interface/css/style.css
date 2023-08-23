@@ -599,6 +599,7 @@ table {
             background-color: rgba(0, 0, 0, 0.5);
             justify-content: center;
             align-items: center;
+            z-index: 10;
 
         }
 
@@ -607,7 +608,7 @@ table {
             padding: 20px;
             border-radius: 5px;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-            z-index: 30;
+            z-index: 10;
         }
 
         .modal-open-error {
