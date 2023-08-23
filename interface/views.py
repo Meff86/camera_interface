@@ -6,7 +6,7 @@ from django.shortcuts import render, redirect
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
 import paramiko
 import os
-from .models import CarPart, Photo, MatchingArticle
+from .models import CarPart, Photo, MatchingArticle, VerifiedArticle
 from queue import Queue
 import numpy as np
 from .forms import CarPartForm
@@ -16,6 +16,7 @@ from botocore.exceptions import NoCredentialsError
 import shutil
 from django.utils import timezone
 from datetime import datetime
+from .json_utils import CustomJSONEncoder
 import json
 
 AWS_S3_ACCESS_KEY_ID = 'YCAJED2HUj8DMX6N6ROlMjD4O'
@@ -25,7 +26,7 @@ AWS_S3_ENDPOINT_URL = 'https://storage.yandexcloud.net'
 
 
 # Глобальные переменные
-camera_numbers = [1, 2, 3, 4, 5]
+camera_numbers = [1, 2, 3, 4, 5, 6, 7]
 folder_number = 1
 screenshot_counter = 1
 value = None
@@ -49,6 +50,7 @@ def stream_video(request):
     # Установка разрешения видео
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
+    cap.set(cv2.CAP_PROP_AUTOFOCUS, 1)
 
     def generate_frames():
         try:
@@ -80,7 +82,8 @@ def capture_frames(request):
     i = 0
 
     position_value = request.POST.get('front_value')
-    folder_name = f"{value}"  # Replace 'temp_dir' with the desired temporary directory path
+    current_time = datetime.now().strftime("%Y_%m_%d")
+    folder_name = f"{current_time}_{value}"  # Replace 'temp_dir' with the desired temporary directory path
     folder_path = os.path.join(folder_name)
     os.makedirs(folder_path, exist_ok=True)
 
@@ -91,10 +94,10 @@ def capture_frames(request):
         time.sleep(frame_interval)
 
         # Получаем последний доступный кадр из каждого видеопотока
-        frame1 = last_frames[4]
-        frame2 = last_frames[6]
-        frame3 = last_frames[3]
-        frame4 = last_frames[5]
+        frame1 = last_frames[1]
+        frame2 = last_frames[1]
+        frame3 = last_frames[4]
+        frame4 = last_frames[4]
 
         # Создаем экземпляр модели Photo и ассоциируем его с моделью CarParts
         car_part = CarPart.objects.get(article_number=value) if value else None
@@ -102,8 +105,10 @@ def capture_frames(request):
 
         # Создаем и сохраняем фотографии
         for frame_number, frame in enumerate([frame1, frame2, frame3, frame4], start=1):
+            current_time = datetime.now().strftime("%Y_%m_%d")
+
             filename = f'{value}_{position_value}_{i}_{frame_number}.jpg'
-            filepath = f'{value}/{filename}'
+            filepath = f'{current_time}_{value}/{filename}'
 
 
             # Сохраняем кадр как изображение
@@ -149,14 +154,14 @@ def example_view(request):
 def save_screenshot(request):
     global folder_number, screenshot_counter, value
 
-    # Открываем видеопоток с первой камерыp
-    camera = 1
+    # Открываем видеопоток с первой камеры
+    camera = 3
     cap = cv2.VideoCapture(camera)
 
     # Установка разрешения видео
     cap.set(cv2.CAP_PROP_AUTOFOCUS, 1)
-    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
-    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 720)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1280)
 
 
     cap.set(cv2.CAP_PROP_AUTOFOCUS, 1)
@@ -169,9 +174,12 @@ def save_screenshot(request):
     if ret:
         try:
             # Create a folder if it doesn't exist
-            folder_name = f"{value}"  # Replace 'temp_dir' with the desired temporary directory path
+            current_time = datetime.now().strftime("%Y_%m_%d")
+
+            folder_name = f"{current_time}_{value}"  # Replace 'temp_dir' with the desired temporary directory path
             folder_path = os.path.join(folder_name)
             os.makedirs(folder_path, exist_ok=True)
+            time.sleep(10)
 
             # Save the frame as an image file with a unique name, including the article number if available
             if value:
@@ -283,8 +291,24 @@ def control_page(request):
     if request.user.groups.filter(name='Операторы').exists():
         return redirect('interface:digital_camera')
 
-    matching_articles = MatchingArticle.objects.all()  # Получить все объекты MatchingArticle
-    return render(request, 'interface/control_page.html', {'matching_articles': matching_articles})
+    if request.method == 'POST':
+        article_number = request.POST.get('article_number')
+        try:
+            matching_article = MatchingArticle.objects.get(article_number=article_number)
+
+            # Проверяем, есть ли такой артикул уже в VerifiedArticle
+            if not VerifiedArticle.objects.filter(article_number=article_number).exists():
+                # Создание записи в VerifiedArticle
+                VerifiedArticle.objects.create(article_number=article_number)
+
+            return JsonResponse({'success': True})
+        except MatchingArticle.DoesNotExist:
+            return JsonResponse({'success': False})
+
+    matching_articles = MatchingArticle.objects.all()
+    verified_articles = VerifiedArticle.objects.values_list('article_number', flat=True)
+    verified_articles_table = VerifiedArticle.objects.all()
+    return render(request, 'interface/control_page.html', {'matching_articles': matching_articles, 'verified_articles': verified_articles,'verified_articles_table': verified_articles_table})
 
 def get_photos_by_article(request):
     article_number = request.GET.get("article_number")
@@ -332,3 +356,6 @@ def delete_matching_article_view(request):
             return JsonResponse({'success': True})
         except MatchingArticle.DoesNotExist:
             return JsonResponse({'success': False})
+
+
+

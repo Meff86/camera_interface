@@ -19,6 +19,7 @@ urlpatterns = [
     path('roster_page/<str:selected_date>/', views.roster_page, name='roster_page_with_date'),
     path('get_car_parts_json/', views.get_car_parts_json, name='get_car_parts_json'),
     path('delete_matching_article/', views.delete_matching_article_view, name='delete_matching_article'),
+
     # ...
 
 ]

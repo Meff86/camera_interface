@@ -30,17 +30,30 @@
             <form class="control_form-article" action="#" method="post">
                 {% csrf_token %}
                 <fieldset class="control__fieldset-textarea" style="height: 200px; overflow: auto;">
-                 <div class="">
-                    <ol>
-                        {% for article in matching_articles %}
-                        <li class="article-item {% if forloop.first %}selected{% endif %}" data-article="{{ article.article_number }}">
-                            {{ article.article_number }} - {{ article.added_time|date:"d-m-Y H:i" }}
-                        </li>
-                        {% endfor %}
-                    </ol>
-                </div>
-
-                </div>
+                    <div class="lists-container">
+                        <div class="list-container">
+                            <h5>Список артикулов</h5>
+                            <ol class="article-list">
+                                {% for article in matching_articles %}
+                                {% if article.article_number not in verified_articles %}
+                                    <li class="article-item {% if forloop.first %}selected{% endif %}" data-article="{{ article.article_number }}">
+                                        {{ article.article_number }} - {{ article.added_time|date:"d-m-Y H:i" }}
+                                    </li>
+                                {% endif %}
+                                {% endfor %}
+                            </ol>
+                        </div>
+                        <div class="list-container">
+                            <h5>Проверенные артикулы</h5>
+                            <ul class="verified-list">
+                                {% for verified_article in verified_articles_table %}
+                                <li>
+                                    {{ verified_article.article_number }} - {{ verified_article.added_time }}
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
                 </fieldset>
                 <fieldset class="current-point">
                      <p>1. Проверка артикула </p>
@@ -77,8 +90,10 @@
                        </div>
                     </fieldset>
                     <fieldset>
+                        {% csrf_token %}
                         <div class="process_wrapper">
                         <p>3. Следующая деталь</p>
+                        <button class="button control__button control__button-agree good" id="good">Совпадает</button>
                         <div class="button_padding-right">
                         <a class="control__process-back" href="#"><img src="{% static 'interface/img/svg/back.svg' %}" height="45" width="45" alt="back"></a>
                         <a class="control__process-next" href="#"><img src="{% static 'interface/img/svg/next.svg' %}" height="45" width="45" alt="next"></a>
@@ -138,6 +153,7 @@
               </form>
           </section>
     </main>
+
     {% endblock %}
     <script>
     const modalControl = document.querySelector('.modal-control');
@@ -213,73 +229,6 @@
 
 
 $(document).ready(function() {
-  const articleItems = $(".article-item");
-  let currentIndex = 0;
-
-  function updateCurrentArticle() {
-    articleItems.removeClass("selected");
-    articleItems.eq(currentIndex).addClass("selected");
-  }
-
-  $(".control__process-back").click(function(event) {
-    event.preventDefault();
-    if (currentIndex > 0) {
-      currentIndex--;
-      updateCurrentArticle();
-    }
-  });
-
-  $(".control__process-next").click(function(event) {
-    event.preventDefault();
-    if (currentIndex < articleItems.length - 1) {
-      currentIndex++;
-      updateCurrentArticle();
-    }
-  });
-  $("ol li").click(function() {
-    var article = $(this).text().split(' - ')[0].trim();
-    $.ajax({
-      url: "{% url 'interface:get_photos_by_article' %}",
-      type: "GET",
-      data: { article_number: article },
-      dataType: "json",
-      success: function(response) {
-        // Обновляем блоки с фотографиями
-        loadPhotosForArticle(response.photos, article);
-      },
-      error: function(xhr, errmsg, err) {
-        console.log(xhr.status + ": " + xhr.responseText);
-      }
-    });
-  });
-});
-
-function loadPhotosForArticle(photos, article) {
-  loadRandomPhotoByLetter(photos, "article", "video-1");
-  loadRandomPhotoByLetter(photos, "F", "video-2");
-  loadRandomPhotoByLetter(photos, "R", "video-3");
-  loadRandomPhotoByLetter(photos, "O", "video-4");
-}
-
-function loadRandomPhotoByLetter(photos, letter, blockId) {
-  let suitablePhotos = [];
-  for (let i = 0; i < photos.length; i++) {
-    if (photos[i].includes(letter)) {
-      suitablePhotos.push(photos[i]);
-    }
-  }
-
-  if (suitablePhotos.length > 0) {
-    const randomIndex = Math.floor(Math.random() * suitablePhotos.length);
-    const randomPhotoUrl = suitablePhotos[randomIndex];
-
-    // Установка атрибута src для изображения
-    $("#" + blockId + " .video-image").attr("src", randomPhotoUrl);
-  } else {
-    console.log(`No suitable photo found for ${letter}`);
-  }
-}
-$(document).ready(function() {
     $(".button.control__button-disagree").click(function(e) {
         e.preventDefault(); // Предотвращает стандартное действие кнопки (отправка формы)
 
@@ -304,6 +253,114 @@ $(document).ready(function() {
             }
         });
     });
+});
+    document.addEventListener("DOMContentLoaded", function () {
+    const articleList = document.querySelector(".article-list");
+    const verifiedListContainer = document.querySelector(".verified-list");
+    const goodButton = document.getElementById("good");
+
+    goodButton.addEventListener("click", async function (event) {
+        event.preventDefault();
+        const selectedArticleItem = articleList.querySelector(".article-item.selected");
+        if (selectedArticleItem) {
+            const articleNumber = selectedArticleItem.getAttribute("data-article");
+            const response = await fetch('{% url "interface:control_page" %}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: `article_number=${articleNumber}`
+            });
+            if (response.ok) {
+                // Скрыть элемент списка и добавить в список проверенных
+                selectedArticleItem.hidden = true;
+                const matchingArticle = matchingArticles.find(article => article.article_number === articleNumber);
+                const newItem = document.createElement("li");
+                newItem.textContent = `${matchingArticle.article_number} - ${matchingArticle.added_time}`;
+                verifiedListContainer.appendChild(newItem);
+            }
+        }
+
+        const verifiedArticleNumbers = Array.from(verifiedListContainer.querySelectorAll("li")).map(item => item.textContent.split(" - ")[0]);
+        matchingArticles.forEach(matchingArticle => {
+            if (verifiedArticleNumbers.includes(matchingArticle.article_number)) {
+                const matchingItem = articleList.querySelector(`[data-article="${matchingArticle.article_number}"]`);
+                if (matchingItem) {
+                    matchingItem.hidden = true;
+                }
+            }
+        });
+    });
+   $(document).ready(function() {
+      $(".article-item").first().addClass("selected");
+      const articleItems = $(".article-item");
+      let currentIndex = 0;
+
+      function updateCurrentArticle() {
+        articleItems.removeClass("selected");
+        articleItems.eq(currentIndex).addClass("selected");
+      }
+
+      $(".control__process-back").click(function(event) {
+        event.preventDefault();
+        if (currentIndex > 0) {
+          currentIndex--;
+          updateCurrentArticle();
+        }
+      });
+
+      $(".control__process-next").click(function(event) {
+        event.preventDefault();
+        if (currentIndex < articleItems.length - 1) {
+          currentIndex++;
+          updateCurrentArticle();
+        }
+      });
+      $("ol li").click(function() {
+        var article = $(this).text().split(' - ')[0].trim();
+        $.ajax({
+          url: "{% url 'interface:get_photos_by_article' %}",
+          type: "GET",
+          data: { article_number: article },
+          dataType: "json",
+          success: function(response) {
+            // Обновляем блоки с фотографиями
+            loadPhotosForArticle(response.photos, article);
+          },
+          error: function(xhr, errmsg, err) {
+            console.log(xhr.status + ": " + xhr.responseText);
+          }
+        });
+      });
+   });
+
+function loadPhotosForArticle(photos, article) {
+  loadRandomPhotoByLetter(photos, "article", "video-1");
+  loadRandomPhotoByLetter(photos, "Front", "video-2");
+  loadRandomPhotoByLetter(photos, "Rear", "video-3");
+  loadRandomPhotoByLetter(photos, "Other", "video-4");
+}
+
+function loadRandomPhotoByLetter(photos, letter, blockId) {
+  let suitablePhotos = [];
+  for (let i = 0; i < photos.length; i++) {
+    if (photos[i].includes(letter)) {
+      suitablePhotos.push(photos[i]);
+    }
+  }
+
+  if (suitablePhotos.length > 0) {
+    const randomIndex = Math.floor(Math.random() * suitablePhotos.length);
+    const randomPhotoUrl = suitablePhotos[randomIndex];
+
+    // Установка атрибута src для изображения
+    $("#" + blockId + " .video-image").attr("src", randomPhotoUrl);
+  } else {
+    console.log(`No suitable photo found for ${letter}`);
+  }
+}
+
 });
 
 // Функция для получения CSRF-токена
@@ -392,7 +449,10 @@ document.addEventListener("fullscreenchange", function () {
             icon.firstChild.height = 40;
         });
     }
+
 });
 </script>
+
+
 </body>
 </html>

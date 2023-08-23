@@ -36,3 +36,9 @@ class Photo(models.Model):
     def __str__(self):
         return f"Фото {self.car_part.name}"
 
+class VerifiedArticle(models.Model):
+    article_number = models.CharField(max_length=50, unique=True)
+    added_time = models.DateTimeField(default=datetime.now, blank=True)
+
+    def __str__(self):
+        return self.article_number

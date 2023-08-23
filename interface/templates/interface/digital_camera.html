@@ -85,7 +85,7 @@
                     </div>
                     <div class="process_wrapper">
                       <div class="digital__process-actions">
-                        <a class="digital__process-front-run digital__process-run action" href="#" data-value='F'><img src="{% static 'interface/img/svg/run.svg' %}" height="30" width="30" alt="run" ></a>
+                        <a class="digital__process-front-run digital__process-run action" href="#" data-value='Front'><img src="{% static 'interface/img/svg/run.svg' %}" height="30" width="30" alt="run" ></a>
                         <a class="digital__process-front-stop action" href="#"><img src="{% static 'interface/img/svg/stop.svg' %}" height="30" width="30" alt="stop"></a>
                         <a class="digital__process-front-back action" href="#"><img src="{% static 'interface/img/svg/back.svg' %}" height="30" width="30" class="back"></a>
                         <a class="digital__process-front-next action" href="#"><img src="{% static 'interface/img/svg/next.svg' %}" height="30" width="30" class="next"></a>
@@ -112,7 +112,7 @@
                     </div>
                     <div class="process_wrapper">
                       <div class="digital__process-actions">
-                        <a class="digital__process-rear-run digital__process-run action" href="#" data-value='R'><img src="{% static 'interface/img/svg/run.svg' %}" height="30" width="30" alt="run"></a>
+                        <a class="digital__process-rear-run digital__process-run action" href="#" data-value='Rear'><img src="{% static 'interface/img/svg/run.svg' %}" height="30" width="30" alt="run"></a>
                         <a class="digital__process-stop action" href="#"><img src="{% static 'interface/img/svg/stop.svg' %}" height="30" width="30" alt="stop"></a>
                         <a class="digital__process-back action" href="#"><img src="{% static 'interface/img/svg/back.svg' %}" height="30" width="30" class="back"></a>
                         <a class="digital__process-next action" href="#"><img src="{% static 'interface/img/svg/next.svg' %}" height="30" width="30" class="next"></a>
@@ -137,7 +137,7 @@
                     </div>
                     <div class="process_wrapper">
                       <div class="digital__process-actions">
-                        <a class="digital__process-other-run digital__process-run action" href="#" data-value='O'><img src="{% static 'interface/img/svg/run.svg' %}" height="30" width="30" alt="run"></a>
+                        <a class="digital__process-other-run digital__process-run action" href="#" data-value='Other'><img src="{% static 'interface/img/svg/run.svg' %}" height="30" width="30" alt="run"></a>
                         <a class="digital__process-stop action" href="#"><img src="{% static 'interface/img/svg/stop.svg' %}" height="30" width="30" alt="stop"></a>
                         <a class="digital__process-back action" href="#"><img src="{% static 'interface/img/svg/back.svg' %}" height="30" width="30" class="back"></a>
                         <a class="digital__process-next action" href="#"><img src="{% static 'interface/img/svg/next.svg' %}" height="30" width="30" class="next"></a>
@@ -156,19 +156,19 @@
                 <p class="digital__camera-heading">Экран камеры</p>
                     <div class="digital_video-wrapper">
                           <div class="digital_video-1">
-                            <img src="{% url 'interface:stream_video' %}?camera=4" id="video1" width="320" height="240">
+                            <img src="{% url 'interface:stream_video' %}?camera=1" id="video1" width="320" height="240">
                             <a class="digital_video-full-1" href="#" onclick="openFullscreen('video1');"><img src="{% static 'interface/img/svg/full_screen.svg' %}" width="40" height="40"></a>
                           </div>
                           <div class="digital_video-2">
-                            <img src="{% url 'interface:stream_video' %}?camera=6" id="video2" width="320" height="240">
+                            <img src="{% url 'interface:stream_video' %}?camera=1" id="video2" width="320" height="240">
                             <a class="digital_video-full-2" href="#" onclick="openFullscreen('video2');"><img src="{% static 'interface/img/svg/full_screen.svg' %}" width="40" height="40"></a>
                           </div>
                           <div class="digital_video-3">
-                            <img src="{% url 'interface:stream_video' %}?camera=3" id="video3" width="320" height="240">
+                            <img src="{% url 'interface:stream_video' %}?camera=4" id="video3" width="320" height="240">
                             <a class="digital_video-full-3" href="#" onclick="openFullscreen('video3');"><img src="{% static 'interface/img/svg/full_screen.svg' %}" width="40" height="40"></a>
                           </div>
                           <div class="digital_video-4">
-                            <img src="{% url 'interface:stream_video' %}?camera=5" id="video4" width="320" height="240">
+                            <img src="{% url 'interface:stream_video' %}?camera=4" id="video4" width="320" height="240">
                             <a class="digital_video-full-4" href="#" onclick="openFullscreen('video4');"><img src="{% static 'interface/img/svg/full_screen.svg' %}" width="40" height="40"></a>
                           </div>
                         </div>
