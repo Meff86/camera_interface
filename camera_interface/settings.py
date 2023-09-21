@@ -15,13 +15,14 @@ import os
 
 from dotenv import load_dotenv
 load_dotenv()
-
+DEBUG = True
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent.parent
+BASE_DIR = Path(__file__).resolve().parent.parent
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
 ]
 
+ROOT_URLCONF = 'camera_interface.urls'
 
 
 # Quick-start development settings - unsuitable for production
@@ -30,7 +31,7 @@ STATICFILES_DIRS = [
 SECRET_KEY = os.getenv("SECRET_KEY")
 
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['87.249.15.134']
 
 
 # Application definition
@@ -47,6 +48,7 @@ INSTALLED_APPS = [
     'django.contrib.postgres',
     'corsheaders',
     'storages',
+    'gunicorn'
 
 ]
 
@@ -160,3 +162,14 @@ AWS_S3_ACCESS_KEY_ID = os.getenv('AWS_S3_ACCESS_KEY_ID')
 AWS_S3_SECRET_ACCESS_KEY = os.getenv('AWS_S3_SECRET_ACCESS_KEY')
 AWS_STORAGE_BUCKET_NAME = os.getenv('AWS_STORAGE_BUCKET_NAME')
 AWS_QUERYSTRING_AUTH = False
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        "NAME": POSTGRES_DB,
+        "USER": POSTGRES_USER,
+        "HOST": POSTGRES_HOST,
+        "PORT": POSTGRES_PORT,
+        "PASSWORD": POSTGRES_PASSWORD,
+    }
+}

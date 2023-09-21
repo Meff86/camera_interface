@@ -94,10 +94,10 @@ def capture_frames(request):
         time.sleep(frame_interval)
 
         # Получаем последний доступный кадр из каждого видеопотока
-        frame1 = last_frames[1]
-        frame2 = last_frames[1]
-        frame3 = last_frames[4]
-        frame4 = last_frames[4]
+        frame1 = last_frames[5]
+        frame2 = last_frames[2]
+        frame3 = last_frames[3]
+        frame4 = last_frames[3]
 
         # Создаем экземпляр модели Photo и ассоциируем его с моделью CarParts
         car_part = CarPart.objects.get(article_number=value) if value else None
@@ -155,7 +155,7 @@ def save_screenshot(request):
     global folder_number, screenshot_counter, value
 
     # Открываем видеопоток с первой камеры
-    camera = 3
+    camera = 1
     cap = cv2.VideoCapture(camera)
 
     # Установка разрешения видео
@@ -165,10 +165,13 @@ def save_screenshot(request):
 
 
     cap.set(cv2.CAP_PROP_AUTOFOCUS, 1)
+    time.sleep(10)
     ret, frame = cap.read()
     if not ret:
         cap.release()  # Освобождаем ресурсы камеры
         return HttpResponse('Failed to capture a frame from camera.')
+
+
 
     # Если получен кадр, сохраняем его как изображение
     if ret:
@@ -179,7 +182,7 @@ def save_screenshot(request):
             folder_name = f"{current_time}_{value}"  # Replace 'temp_dir' with the desired temporary directory path
             folder_path = os.path.join(folder_name)
             os.makedirs(folder_path, exist_ok=True)
-            time.sleep(10)
+
 
             # Save the frame as an image file with a unique name, including the article number if available
             if value:
@@ -267,6 +270,8 @@ def send_files_to_server(request):
 
 
 def digital_camera(request):
+    if request.user.groups.filter(name='Контролеры').exists():
+        return redirect('interface:control_page')
     return render(request, 'interface/digital_camera.html')
 
 
